@@ -1,13 +1,13 @@
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import {
   DAYS,
-  STORAGE_KEYS,
   buildModuleMaps,
+  clearLegacyPersistentState,
+  clearLegacyStoredState,
   cleanLabel,
   cleanModuleCode,
-  createDefaultModuleDefinitions,
+  createDefaultAppState,
   createModuleDefinition,
-  createEmptyTimetable,
   getCurrentPeriodIndex,
   getDateKey,
   getDayIndex,
@@ -17,45 +17,15 @@ import {
   getStatusCard,
   getWeekDates,
   isModuleLabel,
-  loadPersistentValue,
-  loadStoredValue,
-  normalizeBaseTimetable,
-  normalizeModuleColors,
-  normalizeModuleDefinitions,
-  normalizeModuleDetails,
-  normalizeOverrides,
-  savePersistentValue,
-  saveStoredValue,
+  loadPersistentAppState,
+  savePersistentAppState,
 } from './timetableShared.js'
 
 export function useTimetableApp() {
-  const initialLegacyColors = useMemo(() => (
-    loadStoredValue(
-      STORAGE_KEYS.colors,
-      normalizeModuleColors,
-      {},
-    )
-  ), [])
-  const initialLegacyDetails = useMemo(() => (
-    loadStoredValue(
-      STORAGE_KEYS.details,
-      normalizeModuleDetails,
-      {},
-    )
-  ), [])
-  const [baseTimetable, setBaseTimetable] = useState(() =>
-    loadStoredValue(STORAGE_KEYS.base, normalizeBaseTimetable, createEmptyTimetable()),
-  )
-  const [overrides, setOverrides] = useState(() =>
-    loadStoredValue(STORAGE_KEYS.overrides, normalizeOverrides, {}),
-  )
-  const [moduleDefinitions, setModuleDefinitions] = useState(() =>
-    loadStoredValue(
-      STORAGE_KEYS.modules,
-      (value) => normalizeModuleDefinitions(value, initialLegacyColors, initialLegacyDetails),
-      createDefaultModuleDefinitions(),
-    ),
-  )
+  const initialAppState = useMemo(() => createDefaultAppState(), [])
+  const [baseTimetable, setBaseTimetable] = useState(initialAppState.baseTimetable)
+  const [overrides, setOverrides] = useState(initialAppState.overrides)
+  const [moduleDefinitions, setModuleDefinitions] = useState(initialAppState.moduleDefinitions)
   const initialSchoolDayIndex = getDayIndex(getDayKey(new Date()))
   const [selectedCell, setSelectedCell] = useState(null)
   const [draftModule, setDraftModule] = useState('')
@@ -74,44 +44,15 @@ export function useTimetableApp() {
     let cancelled = false
 
     async function hydratePersistentState() {
-      const [
-        persistedBase,
-        persistedOverrides,
-        persistedModules,
-        persistedColors,
-        persistedDetails,
-      ] = await Promise.all([
-        loadPersistentValue(STORAGE_KEYS.base),
-        loadPersistentValue(STORAGE_KEYS.overrides),
-        loadPersistentValue(STORAGE_KEYS.modules),
-        loadPersistentValue(STORAGE_KEYS.colors),
-        loadPersistentValue(STORAGE_KEYS.details),
-      ])
+      const persistedState = await loadPersistentAppState()
 
       if (cancelled) {
         return
       }
 
-      const nextLegacyColors = persistedColors
-        ? normalizeModuleColors(persistedColors)
-        : initialLegacyColors
-      const nextLegacyDetails = persistedDetails
-        ? normalizeModuleDetails(persistedDetails)
-        : initialLegacyDetails
-
-      if (persistedBase) {
-        setBaseTimetable(normalizeBaseTimetable(persistedBase))
-      }
-
-      if (persistedOverrides) {
-        setOverrides(normalizeOverrides(persistedOverrides))
-      }
-
-      if (persistedModules || persistedColors || persistedDetails) {
-        setModuleDefinitions(
-          normalizeModuleDefinitions(persistedModules, nextLegacyColors, nextLegacyDetails),
-        )
-      }
+      setBaseTimetable(persistedState.baseTimetable)
+      setOverrides(persistedState.overrides)
+      setModuleDefinitions(persistedState.moduleDefinitions)
 
       setHasLoadedPersistentState(true)
     }
@@ -121,7 +62,7 @@ export function useTimetableApp() {
     return () => {
       cancelled = true
     }
-  }, [initialLegacyColors, initialLegacyDetails])
+  }, [])
 
   useEffect(() => {
     if (!hasLoadedPersistentState) {
@@ -131,36 +72,20 @@ export function useTimetableApp() {
     let cancelled = false
 
     async function persistState() {
-      const localBase = saveStoredValue(STORAGE_KEYS.base, baseTimetable)
-      const localOverrides = saveStoredValue(STORAGE_KEYS.overrides, overrides)
-      const localModules = saveStoredValue(STORAGE_KEYS.modules, moduleDefinitions)
-      const localColors = saveStoredValue(STORAGE_KEYS.colors, moduleColors)
-      const localDetails = saveStoredValue(STORAGE_KEYS.details, moduleDetails)
-
-      const [
-        persistedBase,
-        persistedOverrides,
-        persistedModules,
-        persistedColors,
-        persistedDetails,
-      ] = await Promise.all([
-        savePersistentValue(STORAGE_KEYS.base, baseTimetable),
-        savePersistentValue(STORAGE_KEYS.overrides, overrides),
-        savePersistentValue(STORAGE_KEYS.modules, moduleDefinitions),
-        savePersistentValue(STORAGE_KEYS.colors, moduleColors),
-        savePersistentValue(STORAGE_KEYS.details, moduleDetails),
-      ])
+      const saved = await savePersistentAppState({
+        baseTimetable,
+        overrides,
+        moduleDefinitions,
+      })
 
       if (cancelled) {
         return
       }
 
-      const saved =
-        (localBase || persistedBase)
-        && (localOverrides || persistedOverrides)
-        && (localModules || persistedModules)
-        && (localColors || persistedColors)
-        && (localDetails || persistedDetails)
+      if (saved) {
+        clearLegacyStoredState()
+        void clearLegacyPersistentState()
+      }
 
       setLastSavedAt(saved ? new Date() : null)
     }
@@ -173,9 +98,7 @@ export function useTimetableApp() {
   }, [
     baseTimetable,
     hasLoadedPersistentState,
-    moduleColors,
     moduleDefinitions,
-    moduleDetails,
     overrides,
   ])
 

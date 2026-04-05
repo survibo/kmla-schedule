@@ -42,6 +42,7 @@ export const STORAGE_KEYS = {
 const PERSISTENCE_DB_NAME = 'schedule-app'
 const PERSISTENCE_DB_VERSION = 1
 const PERSISTENCE_STORE_NAME = 'app-state'
+const APP_STATE_RECORD_KEY = 'schedule-app-state-v1'
 
 export const SCHEDULE_BLOCKS = [
   { type: 'period', periodIndex: 0, start: '08:30', end: '09:20' },
@@ -82,6 +83,14 @@ export function createDefaultModuleDetails() {
       },
     ]),
   )
+}
+
+export function createDefaultAppState() {
+  return {
+    baseTimetable: createEmptyTimetable(),
+    overrides: {},
+    moduleDefinitions: createDefaultModuleDefinitions(),
+  }
 }
 
 export function getDateKey(date) {
@@ -265,6 +274,21 @@ export function normalizeModuleDefinitions(value, legacyColors = {}, legacyDetai
   return normalized.length > 0 ? normalized : fallback
 }
 
+export function normalizeAppState(value) {
+  const legacyColors = normalizeModuleColors(value?.moduleColors)
+  const legacyDetails = normalizeModuleDetails(value?.moduleDetails)
+
+  return {
+    baseTimetable: normalizeBaseTimetable(value?.baseTimetable),
+    overrides: normalizeOverrides(value?.overrides),
+    moduleDefinitions: normalizeModuleDefinitions(
+      value?.moduleDefinitions,
+      legacyColors,
+      legacyDetails,
+    ),
+  }
+}
+
 export function buildModuleMaps(moduleDefinitions) {
   const moduleColors = {}
   const moduleDetails = {}
@@ -327,6 +351,14 @@ export function saveStoredValue(key, value) {
     return true
   } catch {
     return false
+  }
+}
+
+function removeStoredValue(key) {
+  try {
+    window.localStorage.removeItem(key)
+  } catch {
+    return
   }
 }
 
@@ -399,6 +431,134 @@ export async function savePersistentValue(key, value) {
       resolve(false)
     }
   })
+}
+
+export async function deletePersistentValue(key) {
+  const database = await openPersistenceDb()
+
+  if (!database) {
+    return false
+  }
+
+  return new Promise((resolve) => {
+    const transaction = database.transaction(PERSISTENCE_STORE_NAME, 'readwrite')
+    const store = transaction.objectStore(PERSISTENCE_STORE_NAME)
+
+    store.delete(key)
+
+    transaction.oncomplete = () => {
+      database.close()
+      resolve(true)
+    }
+    transaction.onerror = () => {
+      database.close()
+      resolve(false)
+    }
+    transaction.onabort = () => {
+      database.close()
+      resolve(false)
+    }
+  })
+}
+
+export function loadLegacyAppState() {
+  const legacyColors = loadStoredValue(
+    STORAGE_KEYS.colors,
+    normalizeModuleColors,
+    {},
+  )
+  const legacyDetails = loadStoredValue(
+    STORAGE_KEYS.details,
+    normalizeModuleDetails,
+    {},
+  )
+
+  return {
+    baseTimetable: loadStoredValue(
+      STORAGE_KEYS.base,
+      normalizeBaseTimetable,
+      createEmptyTimetable(),
+    ),
+    overrides: loadStoredValue(
+      STORAGE_KEYS.overrides,
+      normalizeOverrides,
+      {},
+    ),
+    moduleDefinitions: loadStoredValue(
+      STORAGE_KEYS.modules,
+      (value) => normalizeModuleDefinitions(value, legacyColors, legacyDetails),
+      createDefaultModuleDefinitions(),
+    ),
+  }
+}
+
+export async function loadPersistentAppState() {
+  const snapshot = await loadPersistentValue(APP_STATE_RECORD_KEY)
+
+  if (snapshot) {
+    return normalizeAppState(snapshot)
+  }
+
+  const legacyPersistentValues = await Promise.all([
+    loadPersistentValue(STORAGE_KEYS.base),
+    loadPersistentValue(STORAGE_KEYS.overrides),
+    loadPersistentValue(STORAGE_KEYS.modules),
+    loadPersistentValue(STORAGE_KEYS.colors),
+    loadPersistentValue(STORAGE_KEYS.details),
+  ])
+
+  if (legacyPersistentValues.some((value) => value !== null)) {
+    const [baseTimetable, overrides, moduleDefinitions, moduleColors, moduleDetails] = legacyPersistentValues
+
+    return normalizeAppState({
+      baseTimetable,
+      overrides,
+      moduleDefinitions,
+      moduleColors,
+      moduleDetails,
+    })
+  }
+
+  const localSnapshot = loadStoredValue(
+    APP_STATE_RECORD_KEY,
+    normalizeAppState,
+    null,
+  )
+
+  if (localSnapshot) {
+    return localSnapshot
+  }
+
+  return loadLegacyAppState()
+}
+
+export async function savePersistentAppState(appState) {
+  const normalizedState = normalizeAppState(appState)
+  const persisted = await savePersistentValue(APP_STATE_RECORD_KEY, normalizedState)
+
+  if (persisted) {
+    return true
+  }
+
+  return saveStoredValue(APP_STATE_RECORD_KEY, normalizedState)
+}
+
+export async function clearLegacyPersistentState() {
+  await Promise.all([
+    deletePersistentValue(STORAGE_KEYS.base),
+    deletePersistentValue(STORAGE_KEYS.overrides),
+    deletePersistentValue(STORAGE_KEYS.modules),
+    deletePersistentValue(STORAGE_KEYS.colors),
+    deletePersistentValue(STORAGE_KEYS.details),
+  ])
+}
+
+export function clearLegacyStoredState() {
+  removeStoredValue(STORAGE_KEYS.base)
+  removeStoredValue(STORAGE_KEYS.overrides)
+  removeStoredValue(STORAGE_KEYS.modules)
+  removeStoredValue(STORAGE_KEYS.colors)
+  removeStoredValue(STORAGE_KEYS.details)
 }
 
 export function parseTime(time) {

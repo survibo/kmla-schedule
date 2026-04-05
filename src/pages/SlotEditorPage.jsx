@@ -190,7 +190,7 @@ export function SlotEditorPage({
           </p>
         </div>
 
-        <div className="flex flex-wrap space-x-0.5 basis-15">
+        <div className="flex flex-wrap gap-2">
           {moduleDefinitions.map((module) => {
             const palette = getModulePalette(module.code, moduleColors, moduleCodeSet)
             const isActive = draftModule === module.code
@@ -201,7 +201,7 @@ export function SlotEditorPage({
                 key={module.code}
                 type="button"
                 className={[
-                  'grid cursor-pointer gap-1 rounded-[1rem] border-[1.5px] p-[0.8rem_0.6rem] text-left font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
+                  'grid min-w-[80px] cursor-pointer gap-1 rounded-[0.5rem] border-[1.5px] p-[0.5rem] text-left font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
                   isActive ? 'translate-y-[-1px] shadow-[0_0_0_3px_rgba(20,34,33,0.08)]' : '',
                 ].join(' ')}
                 style={{
