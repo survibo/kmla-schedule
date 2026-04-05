@@ -28,8 +28,7 @@ function ModuleCard({ module, onRename, onUpdate, onRemove }) {
   return (
     <article className="rounded-[1.15rem] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]">
       <div className="grid gap-7">
-        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-          <label className="grid flex-1 gap-1.5">
+        <label className="grid gap-1.5">
             <span className="text-[0.88rem] font-bold text-[var(--muted)]">Code</span>
             <input
               type="text"
@@ -44,16 +43,7 @@ function ModuleCard({ module, onRename, onUpdate, onRemove }) {
                 }
               }}
             />
-          </label>
-
-          <button
-            type="button"
-            className="cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-transparent px-4 py-[0.7rem] text-sm font-semibold text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
-            onClick={() => onRemove(module.code)}
-          >
-            Remove
-          </button>
-        </div>
+        </label>
 
         <label className="grid gap-1.5">
           <span className="text-[0.88rem] font-bold text-[var(--muted)]">Subject</span>
@@ -97,6 +87,14 @@ function ModuleCard({ module, onRename, onUpdate, onRemove }) {
             placeholder="Room"
           />
         </label>
+
+        <button
+          type="button"
+          className="cursor-pointer rounded-[0.95rem] border border-[rgba(176,48,48,0.26)] bg-[rgba(176,48,48,0.1)] px-4 py-[0.9rem] text-sm font-semibold text-[rgb(145,32,32)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(176,48,48,0.34)]"
+          onClick={() => onRemove(module.code)}
+        >
+          Remove module
+        </button>
       </div>
     </article>
   )
