@@ -17,26 +17,32 @@ import {
   getStatusCard,
   getWeekDates,
   isModuleLabel,
+  loadPersistentValue,
   loadStoredValue,
   normalizeBaseTimetable,
   normalizeModuleColors,
   normalizeModuleDefinitions,
   normalizeModuleDetails,
   normalizeOverrides,
+  savePersistentValue,
   saveStoredValue,
 } from './timetableShared.js'
 
 export function useTimetableApp() {
-  const initialLegacyColors = loadStoredValue(
-    STORAGE_KEYS.colors,
-    normalizeModuleColors,
-    {},
-  )
-  const initialLegacyDetails = loadStoredValue(
-    STORAGE_KEYS.details,
-    normalizeModuleDetails,
-    {},
-  )
+  const initialLegacyColors = useMemo(() => (
+    loadStoredValue(
+      STORAGE_KEYS.colors,
+      normalizeModuleColors,
+      {},
+    )
+  ), [])
+  const initialLegacyDetails = useMemo(() => (
+    loadStoredValue(
+      STORAGE_KEYS.details,
+      normalizeModuleDetails,
+      {},
+    )
+  ), [])
   const [baseTimetable, setBaseTimetable] = useState(() =>
     loadStoredValue(STORAGE_KEYS.base, normalizeBaseTimetable, createEmptyTimetable()),
   )
@@ -58,23 +64,120 @@ export function useTimetableApp() {
   const [weekFocusIndex, setWeekFocusIndex] = useState(() => (initialSchoolDayIndex >= 0 ? initialSchoolDayIndex : 0))
   const [now, setNow] = useState(() => new Date())
   const [lastSavedAt, setLastSavedAt] = useState(null)
+  const [hasLoadedPersistentState, setHasLoadedPersistentState] = useState(false)
   const { moduleColors, moduleDetails, moduleCodeSet } = useMemo(
     () => buildModuleMaps(moduleDefinitions),
     [moduleDefinitions],
   )
 
   useEffect(() => {
-    const savedBase = saveStoredValue(STORAGE_KEYS.base, baseTimetable)
-    const savedOverrides = saveStoredValue(STORAGE_KEYS.overrides, overrides)
-    const savedModules = saveStoredValue(STORAGE_KEYS.modules, moduleDefinitions)
+    let cancelled = false
 
-    if (savedBase && savedOverrides && savedModules) {
-      setLastSavedAt(new Date())
+    async function hydratePersistentState() {
+      const [
+        persistedBase,
+        persistedOverrides,
+        persistedModules,
+        persistedColors,
+        persistedDetails,
+      ] = await Promise.all([
+        loadPersistentValue(STORAGE_KEYS.base),
+        loadPersistentValue(STORAGE_KEYS.overrides),
+        loadPersistentValue(STORAGE_KEYS.modules),
+        loadPersistentValue(STORAGE_KEYS.colors),
+        loadPersistentValue(STORAGE_KEYS.details),
+      ])
+
+      if (cancelled) {
+        return
+      }
+
+      const nextLegacyColors = persistedColors
+        ? normalizeModuleColors(persistedColors)
+        : initialLegacyColors
+      const nextLegacyDetails = persistedDetails
+        ? normalizeModuleDetails(persistedDetails)
+        : initialLegacyDetails
+
+      if (persistedBase) {
+        setBaseTimetable(normalizeBaseTimetable(persistedBase))
+      }
+
+      if (persistedOverrides) {
+        setOverrides(normalizeOverrides(persistedOverrides))
+      }
+
+      if (persistedModules || persistedColors || persistedDetails) {
+        setModuleDefinitions(
+          normalizeModuleDefinitions(persistedModules, nextLegacyColors, nextLegacyDetails),
+        )
+      }
+
+      setHasLoadedPersistentState(true)
+    }
+
+    void hydratePersistentState()
+
+    return () => {
+      cancelled = true
+    }
+  }, [initialLegacyColors, initialLegacyDetails])
+
+  useEffect(() => {
+    if (!hasLoadedPersistentState) {
       return
     }
 
-    setLastSavedAt(null)
-  }, [baseTimetable, moduleDefinitions, overrides])
+    let cancelled = false
+
+    async function persistState() {
+      const localBase = saveStoredValue(STORAGE_KEYS.base, baseTimetable)
+      const localOverrides = saveStoredValue(STORAGE_KEYS.overrides, overrides)
+      const localModules = saveStoredValue(STORAGE_KEYS.modules, moduleDefinitions)
+      const localColors = saveStoredValue(STORAGE_KEYS.colors, moduleColors)
+      const localDetails = saveStoredValue(STORAGE_KEYS.details, moduleDetails)
+
+      const [
+        persistedBase,
+        persistedOverrides,
+        persistedModules,
+        persistedColors,
+        persistedDetails,
+      ] = await Promise.all([
+        savePersistentValue(STORAGE_KEYS.base, baseTimetable),
+        savePersistentValue(STORAGE_KEYS.overrides, overrides),
+        savePersistentValue(STORAGE_KEYS.modules, moduleDefinitions),
+        savePersistentValue(STORAGE_KEYS.colors, moduleColors),
+        savePersistentValue(STORAGE_KEYS.details, moduleDetails),
+      ])
+
+      if (cancelled) {
+        return
+      }
+
+      const saved =
+        (localBase || persistedBase)
+        && (localOverrides || persistedOverrides)
+        && (localModules || persistedModules)
+        && (localColors || persistedColors)
+        && (localDetails || persistedDetails)
+
+      setLastSavedAt(saved ? new Date() : null)
+    }
+
+    void persistState()
+
+    return () => {
+      cancelled = true
+    }
+  }, [
+    baseTimetable,
+    hasLoadedPersistentState,
+    moduleColors,
+    moduleDefinitions,
+    moduleDetails,
+    overrides,
+  ])
 
   useEffect(() => {
     const timer = window.setInterval(() => {

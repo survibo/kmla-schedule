@@ -190,7 +190,7 @@ export function SlotEditorPage({
           </p>
         </div>
 
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(4rem,1fr))] gap-3">
+        <div className="flex flex-wrap space-x-0.5 basis-15">
           {moduleDefinitions.map((module) => {
             const palette = getModulePalette(module.code, moduleColors, moduleCodeSet)
             const isActive = draftModule === module.code

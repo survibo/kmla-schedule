@@ -39,6 +39,10 @@ export const STORAGE_KEYS = {
   details: 'moduleDetails',
 }
 
+const PERSISTENCE_DB_NAME = 'schedule-app'
+const PERSISTENCE_DB_VERSION = 1
+const PERSISTENCE_STORE_NAME = 'app-state'
+
 export const SCHEDULE_BLOCKS = [
   { type: 'period', periodIndex: 0, start: '08:30', end: '09:20' },
   { type: 'break', start: '09:20', end: '09:30', label: 'Break' },
@@ -324,6 +328,77 @@ export function saveStoredValue(key, value) {
   } catch {
     return false
   }
+}
+
+function openPersistenceDb() {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined' || !window.indexedDB) {
+      resolve(null)
+      return
+    }
+
+    const request = window.indexedDB.open(PERSISTENCE_DB_NAME, PERSISTENCE_DB_VERSION)
+
+    request.onupgradeneeded = () => {
+      const database = request.result
+
+      if (!database.objectStoreNames.contains(PERSISTENCE_STORE_NAME)) {
+        database.createObjectStore(PERSISTENCE_STORE_NAME)
+      }
+    }
+
+    request.onsuccess = () => resolve(request.result)
+    request.onerror = () => resolve(null)
+  })
+}
+
+export async function loadPersistentValue(key) {
+  const database = await openPersistenceDb()
+
+  if (!database) {
+    return null
+  }
+
+  return new Promise((resolve) => {
+    const transaction = database.transaction(PERSISTENCE_STORE_NAME, 'readonly')
+    const store = transaction.objectStore(PERSISTENCE_STORE_NAME)
+    const request = store.get(key)
+
+    request.onsuccess = () => resolve(request.result ?? null)
+    request.onerror = () => resolve(null)
+
+    transaction.oncomplete = () => database.close()
+    transaction.onerror = () => database.close()
+    transaction.onabort = () => database.close()
+  })
+}
+
+export async function savePersistentValue(key, value) {
+  const database = await openPersistenceDb()
+
+  if (!database) {
+    return false
+  }
+
+  return new Promise((resolve) => {
+    const transaction = database.transaction(PERSISTENCE_STORE_NAME, 'readwrite')
+    const store = transaction.objectStore(PERSISTENCE_STORE_NAME)
+
+    store.put(value, key)
+
+    transaction.oncomplete = () => {
+      database.close()
+      resolve(true)
+    }
+    transaction.onerror = () => {
+      database.close()
+      resolve(false)
+    }
+    transaction.onabort = () => {
+      database.close()
+      resolve(false)
+    }
+  })
 }
 
 export function parseTime(time) {
