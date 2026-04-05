@@ -1,13 +1,12 @@
 import { useEffect } from 'react'
 import {
-  MODULES,
   PERIODS,
   dateFromKey,
   formatDateLabel,
   getDayKey,
   getLabelPresentation,
   getModulePalette,
-} from '../features/timetable/timetableShared.js'
+} from '../features/timetableShared.js'
 
 export function SlotEditorPage({
   baseRouteDayKey,
@@ -15,11 +14,13 @@ export function SlotEditorPage({
   draftCustomLabel,
   draftModule,
   editorScope,
-  goToBaseEdit,
+  goToWeek,
   goToOverrideEdit,
   handleClearSelection,
   handleSaveSelection,
+  moduleCodeSet,
   moduleColors,
+  moduleDefinitions,
   moduleDetails,
   openBaseCell,
   openOverrideCell,
@@ -60,7 +61,7 @@ export function SlotEditorPage({
     closeEditor()
 
     if (editorScope === 'base') {
-      goToBaseEdit(baseRouteDayKey)
+      goToWeek()
       return
     }
 
@@ -71,7 +72,7 @@ export function SlotEditorPage({
     handleSaveSelection()
 
     if (editorScope === 'base') {
-      goToBaseEdit(baseRouteDayKey)
+      goToWeek()
       return
     }
 
@@ -82,7 +83,7 @@ export function SlotEditorPage({
     handleClearSelection()
     
     if (editorScope === 'base') {
-      goToBaseEdit(baseRouteDayKey)
+      goToWeek()
       return
     }
 
@@ -92,13 +93,13 @@ export function SlotEditorPage({
   useEffect(() => {
     if (!period || (editorScope === 'override' && !overrideDayKey)) {
       if (editorScope === 'base') {
-        goToBaseEdit(baseRouteDayKey)
+        goToWeek()
         return
       }
 
       goToOverrideEdit(overrideRouteDate)
     }
-  }, [baseRouteDayKey, editorScope, goToBaseEdit, goToOverrideEdit, overrideDayKey, overrideRouteDate, period])
+  }, [editorScope, goToOverrideEdit, goToWeek, overrideDayKey, overrideRouteDate, period])
 
   if (!period || (editorScope === 'override' && !overrideDayKey)) {
     return null
@@ -113,10 +114,10 @@ export function SlotEditorPage({
       })} ${period.label}`
 
   const currentLabel = draftCustomLabel || draftModule || null
-  const currentPresentation = getLabelPresentation(currentLabel, moduleDetails)
+  const currentPresentation = getLabelPresentation(currentLabel, moduleDetails, moduleCodeSet)
 
   return (
-    <section className="mx-auto grid w-full max-w-[52rem] gap-4 rounded-[1.2rem] bg-[rgba(255,250,240,0.86)] p-4">
+    <section className="mx-auto grid w-full max-w-[52rem] gap-4 bg-[rgba(255,250,240,0.86)] p-4">
       <div className="mb-4 flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[var(--accent)]">
@@ -149,61 +150,19 @@ export function SlotEditorPage({
         ) : null}
       </div>
 
-      <div className="grid gap-3 rounded-[1.1rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.94)] p-4">
-        <div className="grid gap-3">
-          <h3 className="font-serif text-[1.15rem] leading-[1.05] text-[var(--ink)]">
-            Assign module
-          </h3>
-          <p className="text-[var(--muted)]">Pick one module for this period.</p>
-        </div>
-
-        <div className="grid grid-cols-[repeat(auto-fit,minmax(4rem,1fr))] gap-3">
-          {MODULES.map((module) => {
-            const palette = getModulePalette(module, moduleColors)
-            const isActive = draftModule === module
-            const modulePresentation = getLabelPresentation(module, moduleDetails)
-
-            return (
-              <button
-                key={module}
-                type="button"
-                className={[
-                  'grid cursor-pointer gap-1 rounded-[1rem] border-[1.5px] p-[0.8rem_0.6rem] text-left font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
-                  isActive ? 'translate-y-[-1px] shadow-[0_0_0_3px_rgba(20,34,33,0.08)]' : '',
-                ].join(' ')}
-                style={{
-                  background: palette.background,
-                  borderColor: palette.border,
-                  color: palette.text,
-                }}
-                onClick={() => {
-                  setDraftModule(module)
-                  setDraftCustomLabel('')
-                }}
-              >
-                <span>{module}</span>
-                <small className="text-[0.74rem] font-semibold leading-[1.2] opacity-80">
-                  {modulePresentation.title}
-                </small>
-              </button>
-            )
-          })}
-        </div>
-      </div>
-
       {selectedCell?.scope === 'override' ? (
         <div className="grid gap-3 rounded-[1.1rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.94)] p-4">
           <div className="grid gap-3">
             <h3 className="font-serif text-[1.15rem] leading-[1.05] text-[var(--ink)]">
-              Or use a custom label
+              Override label
             </h3>
             <p className="text-[var(--muted)]">
-              Useful for sports day, exam, event blocks, and one-off schedule changes.
+              대부분 override는 특수 일정이니까, 우선 자유 텍스트로 바로 적을 수 있게 했습니다.
             </p>
           </div>
 
           <label className="grid gap-1.5">
-            <span className="text-[0.88rem] font-bold text-[var(--muted)]">Custom label</span>
+            <span className="text-[0.88rem] font-bold text-[var(--muted)]">Label</span>
             <input
               type="text"
               value={draftCustomLabel}
@@ -215,8 +174,58 @@ export function SlotEditorPage({
               placeholder="e.g. Sports Day"
             />
           </label>
+
+          <div className="rounded-[0.95rem] border border-dashed border-[rgba(20,34,33,0.12)] bg-[rgba(20,34,33,0.03)] px-4 py-3 text-sm text-[var(--muted)]">
+            모듈로 넣고 싶으면 아래에서 선택하면 됩니다.
+          </div>
         </div>
       ) : null}
+
+      <div className="grid gap-3 rounded-[1.1rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.94)] p-4">
+        <div className="grid gap-3">
+          <h3 className="font-serif text-[1.15rem] leading-[1.05] text-[var(--ink)]">
+            {selectedCell?.scope === 'base' ? 'Assign module' : 'Use a module instead'}
+          </h3>
+          <p className="text-[var(--muted)]">
+            {selectedCell?.scope === 'base'
+              ? 'Pick one module for this period.'
+              : 'Optional. Selecting a module will replace the custom override text.'}
+          </p>
+        </div>
+
+        <div className="grid grid-cols-[repeat(auto-fit,minmax(4rem,1fr))] gap-3">
+          {moduleDefinitions.map((module) => {
+            const palette = getModulePalette(module.code, moduleColors, moduleCodeSet)
+            const isActive = draftModule === module.code
+            const modulePresentation = getLabelPresentation(module.code, moduleDetails, moduleCodeSet)
+
+            return (
+              <button
+                key={module.code}
+                type="button"
+                className={[
+                  'grid cursor-pointer gap-1 rounded-[1rem] border-[1.5px] p-[0.8rem_0.6rem] text-left font-bold focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
+                  isActive ? 'translate-y-[-1px] shadow-[0_0_0_3px_rgba(20,34,33,0.08)]' : '',
+                ].join(' ')}
+                style={{
+                  background: palette.background,
+                  borderColor: palette.border,
+                  color: palette.text,
+                }}
+                onClick={() => {
+                  setDraftModule(module.code)
+                  setDraftCustomLabel('')
+                }}
+              >
+                <span>{module.code}</span>
+                <small className="text-[0.74rem] font-semibold leading-[1.2] opacity-80">
+                  {modulePresentation.title}
+                </small>
+              </button>
+            )
+          })}
+        </div>
+      </div>
 
       <div className="grid gap-3 sm:grid-cols-3">
         <button

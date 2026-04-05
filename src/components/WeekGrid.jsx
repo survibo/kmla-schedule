@@ -6,13 +6,14 @@ import {
   getLabelPresentation,
   getModulePalette,
   getOverrideValue,
-} from '../../features/timetable/timetableShared.js'
+} from '../features/timetableShared.js'
 
 export function WeekGrid({
   weekDates,
   baseTimetable,
   overrides,
   moduleColors,
+  moduleCodeSet,
   moduleDetails,
   todayKey,
   activePeriodIndex,
@@ -36,6 +37,7 @@ export function WeekGrid({
               baseTimetable={baseTimetable}
               overrides={overrides}
               moduleColors={moduleColors}
+              moduleCodeSet={moduleCodeSet}
               moduleDetails={moduleDetails}
               todayKey={todayKey}
               activePeriodIndex={activePeriodIndex}
@@ -87,6 +89,7 @@ export function WeekGrid({
               baseTimetable={baseTimetable}
               overrides={overrides}
               moduleColors={moduleColors}
+              moduleCodeSet={moduleCodeSet}
               moduleDetails={moduleDetails}
               todayKey={todayKey}
               activePeriodIndex={activePeriodIndex}
@@ -143,6 +146,7 @@ export function ScheduleDayCard({
   baseTimetable,
   overrides,
   moduleColors,
+  moduleCodeSet,
   moduleDetails,
   todayKey,
   activePeriodIndex,
@@ -156,15 +160,14 @@ export function ScheduleDayCard({
   return (
     <section
       className={[
-        'grid gap-[0.9rem] rounded-[1.35rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]',
+        'grid gap-[0.9rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]',
         isToday ? 'border-[rgba(31,111,120,0.35)] shadow-[0_0_0_3px_rgba(31,111,120,0.08)]' : '',
-        editable ? 'border-dashed' : '',
       ].join(' ')}
     >
       <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
           <p className="text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[var(--accent)]">
-            {editable ? 'Tap a period to edit' : dayLabel}
+            {dayLabel}
           </p>
           <h3 className="font-serif text-[1.15rem] leading-[1.05] text-[var(--ink)]">
             {date.toLocaleDateString(undefined, {
@@ -175,11 +178,6 @@ export function ScheduleDayCard({
           </h3>
         </div>
         <div className="flex flex-wrap gap-[0.4rem] max-sm:justify-start sm:justify-end">
-          {editable ? (
-            <span className="inline-flex items-center justify-center rounded-full bg-[rgba(20,34,33,0.08)] px-[0.65rem] py-[0.3rem] text-[0.75rem] font-extrabold uppercase tracking-[0.04em] text-[var(--muted)]">
-              Edit mode
-            </span>
-          ) : null}
           {isToday ? (
             <span className="inline-flex items-center justify-center rounded-full bg-[rgba(31,111,120,0.12)] px-[0.65rem] py-[0.3rem] text-[0.75rem] font-extrabold uppercase tracking-[0.04em] text-[var(--accent)]">
               Today
@@ -188,10 +186,10 @@ export function ScheduleDayCard({
         </div>
       </div>
 
-      <div className="grid gap-3">
+      <div className="grid gap-1">
         {PERIODS.map((period) => {
           const label = getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, period.number - 1)
-          const presentation = getLabelPresentation(label, moduleDetails)
+          const presentation = getLabelPresentation(label, moduleDetails, moduleCodeSet)
           const hasOverride = Boolean(getOverrideValue(overrides, dateKey, period.number - 1))
           const isLive = isToday && activePeriodIndex === period.number - 1
           const isSelected =
@@ -199,11 +197,11 @@ export function ScheduleDayCard({
             selectedCell?.scope === 'base' &&
             selectedCell.dayKey === dayKey &&
             selectedCell.periodIndex === period.number - 1
-          const palette = getModulePalette(label, moduleColors)
+          const palette = getModulePalette(label, moduleColors, moduleCodeSet)
 
           const content = (
             <>
-              <div className="flex gap-1">
+              <div className="flex gap-1 items-center">
                 <strong className="text-[0.92rem] text-[var(--ink)]">{period.label}</strong>
                 <span className="text-[0.75rem] leading-[1.25] text-[var(--muted)]">
                   {period.start} - {period.end}
@@ -238,7 +236,7 @@ export function ScheduleDayCard({
                 key={period.number}
                 type="button"
                 className={[
-                  'grid grid-cols-1 items-center gap-[0.8rem] rounded-[1rem] border-[1.5px] p-[0.85rem] text-left max-sm:items-start sm:grid-cols-[minmax(4.2rem,4.8rem)_minmax(0,1fr)_auto] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
+                  'grid grid-cols-1 items-center gap-[0.3rem] min-h-[86px] rounded-[0.5rem] border-[1.5px] p-[0.4rem] px-[0.6rem] text-left max-sm:items-start sm:grid-cols-[minmax(4.2rem,4.8rem)_minmax(0,1fr)_auto] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]',
                   hasOverride ? 'border-dashed' : '',
                   isSelected ? 'shadow-[0_0_0_3px_rgba(47,124,172,0.16)]' : '',
                   !isSelected && isLive
@@ -261,7 +259,7 @@ export function ScheduleDayCard({
             <div
               key={period.number}
               className={[
-                'grid grid-cols-1 items-center gap-[0.8rem] rounded-[1rem] border-[1.5px] p-[0.85rem] text-left max-sm:items-start sm:grid-cols-[minmax(4.2rem,4.8rem)_minmax(0,1fr)_auto]',
+                'grid grid-cols-1 items-center gap-[0.3rem] min-h-[86px] rounded-[0.5rem] border-[1.5px] p-[0.4rem] px-[0.6rem] text-left max-sm:items-start sm:grid-cols-[minmax(4.2rem,4.8rem)_minmax(0,1fr)_auto]',
                 hasOverride ? 'border-dashed' : '',
                 isSelected ? 'shadow-[0_0_0_3px_rgba(47,124,172,0.16)]' : '',
                 !isSelected && isLive
@@ -279,13 +277,6 @@ export function ScheduleDayCard({
           )
         })}
       </div>
-
-      <div className="flex flex-col items-start justify-between gap-[0.8rem] rounded-[1rem] bg-[rgba(255,239,214,0.62)] px-[0.9rem] py-[0.8rem] sm:flex-row sm:items-center">
-        <strong className="text-[var(--ink)]">Lunch</strong>
-        <span className="text-[0.82rem] text-[var(--muted)] sm:text-right">
-          12:20 - 12:30 buffer, lunch 12:30 - 13:30
-        </span>
-      </div>
     </section>
   )
 }
@@ -297,6 +288,7 @@ function PeriodRow({
   baseTimetable,
   overrides,
   moduleColors,
+  moduleCodeSet,
   moduleDetails,
   todayKey,
   activePeriodIndex,
@@ -320,7 +312,7 @@ function PeriodRow({
         const dateKey = getDateKey(date)
         const dayKey = DAYS[dayIndex].key
         const label = getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, period.number - 1)
-        const presentation = getLabelPresentation(label, moduleDetails)
+        const presentation = getLabelPresentation(label, moduleDetails, moduleCodeSet)
         const hasOverride = Boolean(getOverrideValue(overrides, dateKey, period.number - 1))
         const isToday = dateKey === todayKey
         const isLive = isToday && activePeriodIndex === period.number - 1
@@ -329,7 +321,7 @@ function PeriodRow({
           selectedCell?.scope === 'base' &&
           selectedCell.dayKey === dayKey &&
           selectedCell.periodIndex === period.number - 1
-        const palette = getModulePalette(label, moduleColors)
+        const palette = getModulePalette(label, moduleColors, moduleCodeSet)
 
         const content = (
           <>
@@ -355,7 +347,7 @@ function PeriodRow({
               key={dateKey}
               type="button"
               className={[
-                'relative grid content-between gap-[0.65rem] rounded-[1.2rem] border-[1.5px] p-[0.85rem] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
+                'relative grid content-between gap-[0.65rem] rounded-[1.2rem] border-[1.5px] p-[0.85rem] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]',
                 hasOverride ? 'border-dashed' : '',
                 isSelected ? 'shadow-[0_0_0_3px_rgba(47,124,172,0.2)]' : '',
                 !isSelected && isLive

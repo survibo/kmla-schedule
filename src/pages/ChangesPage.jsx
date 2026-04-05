@@ -3,11 +3,12 @@ import {
   formatDateLabel,
   getLabelPresentation,
   getModulePalette,
-} from '../features/timetable/timetableShared.js'
+} from '../features/timetableShared.js'
 
 export function ChangesPage({
   jumpToOverridesEdit,
   moduleColors,
+  moduleCodeSet,
   moduleDetails,
   overrides,
   removeOverride,
@@ -75,8 +76,8 @@ export function ChangesPage({
               <div className="grid grid-cols-[repeat(auto-fit,minmax(14rem,1fr))] gap-4">
                 {Object.entries(overrides[dateKey]).map(([periodKey, label]) => {
                   const periodIndex = Number(periodKey) - 1
-                  const palette = getModulePalette(label, moduleColors)
-                  const presentation = getLabelPresentation(label, moduleDetails)
+                  const palette = getModulePalette(label, moduleColors, moduleCodeSet)
+                  const presentation = getLabelPresentation(label, moduleDetails, moduleCodeSet)
 
                   return (
                     <div

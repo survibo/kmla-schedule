@@ -17,25 +17,24 @@ export const PERIODS = [
   { number: 8, label: '8th', start: '16:40', end: '17:30' },
 ]
 
-export const MODULES = ['D1', 'D2', 'D3', 'K', 'L', 'M', 'N', 'G', 'H', 'P', 'S']
-
-export const DEFAULT_MODULE_COLORS = {
-  D1: '#1f6f78',
-  D2: '#2e8b57',
-  D3: '#f28f3b',
-  K: '#c8553d',
-  L: '#5b4b8a',
-  M: '#8f5e2e',
-  N: '#3f7cac',
-  G: '#768948',
-  H: '#c06c84',
-  P: '#2d3047',
-  S: '#7c5cfc',
-}
+export const DEFAULT_MODULE_DEFINITIONS = [
+  { code: 'D1', color: '#1f6f78', subject: '', teacher: '', room: '' },
+  { code: 'D2', color: '#2e8b57', subject: '', teacher: '', room: '' },
+  { code: 'D3', color: '#f28f3b', subject: '', teacher: '', room: '' },
+  { code: 'K', color: '#c8553d', subject: '', teacher: '', room: '' },
+  { code: 'L', color: '#5b4b8a', subject: '', teacher: '', room: '' },
+  { code: 'M', color: '#8f5e2e', subject: '', teacher: '', room: '' },
+  { code: 'N', color: '#3f7cac', subject: '', teacher: '', room: '' },
+  { code: 'G', color: '#768948', subject: '', teacher: '', room: '' },
+  { code: 'H', color: '#c06c84', subject: '', teacher: '', room: '' },
+  { code: 'P', color: '#2d3047', subject: '', teacher: '', room: '' },
+  { code: 'S', color: '#7c5cfc', subject: '', teacher: '', room: '' },
+]
 
 export const STORAGE_KEYS = {
   base: 'baseTimetable',
   overrides: 'overrides',
+  modules: 'moduleDefinitions',
   colors: 'moduleColors',
   details: 'moduleDetails',
 }
@@ -64,14 +63,18 @@ export function createEmptyTimetable() {
   return Object.fromEntries(DAYS.map((day) => [day.key, Array(PERIODS.length).fill(null)]))
 }
 
+export function createDefaultModuleDefinitions() {
+  return DEFAULT_MODULE_DEFINITIONS.map((module) => ({ ...module }))
+}
+
 export function createDefaultModuleDetails() {
   return Object.fromEntries(
-    MODULES.map((module) => [
-      module,
+    createDefaultModuleDefinitions().map((module) => [
+      module.code,
       {
-        subject: '',
-        teacher: '',
-        room: '',
+        subject: module.subject,
+        teacher: module.teacher,
+        room: module.room,
       },
     ]),
   )
@@ -104,6 +107,15 @@ export function cleanLabel(value) {
 
   const trimmed = value.trim()
   return trimmed ? trimmed : null
+}
+
+export function cleanModuleCode(value) {
+  if (typeof value !== 'string') {
+    return null
+  }
+
+  const normalized = value.trim().toUpperCase().replace(/\s+/g, '')
+  return normalized ? normalized : null
 }
 
 export function normalizeBaseTimetable(value) {
@@ -156,14 +168,18 @@ export function normalizeOverrides(value) {
 
 export function normalizeModuleColors(value) {
   if (!value || typeof value !== 'object') {
-    return { ...DEFAULT_MODULE_COLORS }
+    return Object.fromEntries(
+      createDefaultModuleDefinitions().map((module) => [module.code, module.color]),
+    )
   }
 
-  const normalized = { ...DEFAULT_MODULE_COLORS }
+  const normalized = Object.fromEntries(
+    createDefaultModuleDefinitions().map((module) => [module.code, module.color]),
+  )
 
-  MODULES.forEach((module) => {
-    if (isHexColor(value[module])) {
-      normalized[module] = value[module]
+  Object.keys(normalized).forEach((moduleCode) => {
+    if (isHexColor(value[moduleCode])) {
+      normalized[moduleCode] = value[moduleCode]
     }
   })
 
@@ -177,11 +193,11 @@ export function normalizeModuleDetails(value) {
     return fallback
   }
 
-  MODULES.forEach((module) => {
-    const source = value[module]
+  Object.keys(fallback).forEach((moduleCode) => {
+    const source = value[moduleCode]
 
     if (source && typeof source === 'object') {
-      fallback[module] = {
+      fallback[moduleCode] = {
         subject: cleanLabel(source.subject) ?? '',
         teacher: cleanLabel(source.teacher) ?? '',
         room: cleanLabel(source.room) ?? '',
@@ -190,6 +206,90 @@ export function normalizeModuleDetails(value) {
   })
 
   return fallback
+}
+
+export function normalizeModuleDefinitions(value, legacyColors = {}, legacyDetails = {}) {
+  const fallback = createDefaultModuleDefinitions().map((module) => ({
+    ...module,
+    color: legacyColors[module.code] ?? module.color,
+    subject: legacyDetails[module.code]?.subject ?? module.subject,
+    teacher: legacyDetails[module.code]?.teacher ?? module.teacher,
+    room: legacyDetails[module.code]?.room ?? module.room,
+  }))
+
+  if (!Array.isArray(value)) {
+    return fallback
+  }
+
+  const seen = new Set()
+  const normalized = value
+    .map((module, index) => {
+      if (!module || typeof module !== 'object') {
+        return null
+      }
+
+      const code = cleanModuleCode(module.code)
+      if (!code || seen.has(code)) {
+        return null
+      }
+
+      seen.add(code)
+      const fallbackColor = fallback[index]?.color ?? '#3f7cac'
+
+      return {
+        code,
+        color: isHexColor(module.color) ? module.color : fallbackColor,
+        subject: cleanLabel(module.subject) ?? '',
+        teacher: cleanLabel(module.teacher) ?? '',
+        room: cleanLabel(module.room) ?? '',
+      }
+    })
+    .filter(Boolean)
+
+  return normalized.length > 0 ? normalized : fallback
+}
+
+export function buildModuleMaps(moduleDefinitions) {
+  const moduleColors = {}
+  const moduleDetails = {}
+  const moduleCodeSet = new Set()
+
+  moduleDefinitions.forEach((module) => {
+    moduleCodeSet.add(module.code)
+    moduleColors[module.code] = module.color
+    moduleDetails[module.code] = {
+      subject: module.subject,
+      teacher: module.teacher,
+      room: module.room,
+    }
+  })
+
+  return {
+    moduleColors,
+    moduleDetails,
+    moduleCodeSet,
+  }
+}
+
+export function createModuleDefinition(code, color = '#3f7cac') {
+  return {
+    code,
+    color,
+    subject: '',
+    teacher: '',
+    room: '',
+  }
+}
+
+export function getNextModuleCode(moduleDefinitions) {
+  const existingCodes = new Set(moduleDefinitions.map((module) => module.code))
+  let index = 1
+
+  while (existingCodes.has(`M${index}`)) {
+    index += 1
+  }
+
+  return `M${index}`
 }
 
 export function loadStoredValue(key, normalize, fallback) {
@@ -287,8 +387,8 @@ export function formatDateLabel(dateKey, options) {
   return dateFromKey(dateKey).toLocaleDateString(undefined, options)
 }
 
-export function isModuleLabel(label) {
-  return MODULES.includes(label)
+export function isModuleLabel(label, moduleCodeSet) {
+  return typeof label === 'string' && moduleCodeSet.has(label)
 }
 
 export function getOverrideValue(overrides, dateKey, periodIndex) {
@@ -304,16 +404,11 @@ export function getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, per
   return baseTimetable[dayKey]?.[periodIndex] ?? null
 }
 
-export function getContrastColor(hexColor) {
-  const value = hexColor.replace('#', '')
-  const red = Number.parseInt(value.slice(0, 2), 16)
-  const green = Number.parseInt(value.slice(2, 4), 16)
-  const blue = Number.parseInt(value.slice(4, 6), 16)
-  const luminance = (red * 299 + green * 587 + blue * 114) / 1000
-  return luminance >= 150 ? '#142221' : '#f8f6ef'
+export function getContrastColor() {
+  return '#142221'
 }
 
-export function getModulePalette(label, moduleColors) {
+export function getModulePalette(label, moduleColors, moduleCodeSet) {
   if (!label) {
     return {
       background: '#f4efe6',
@@ -322,7 +417,7 @@ export function getModulePalette(label, moduleColors) {
     }
   }
 
-  if (!isModuleLabel(label)) {
+  if (!isModuleLabel(label, moduleCodeSet)) {
     return {
       background: '#f7ddc9',
       border: '#df9b68',
@@ -330,7 +425,7 @@ export function getModulePalette(label, moduleColors) {
     }
   }
 
-  const color = moduleColors[label] ?? DEFAULT_MODULE_COLORS[label]
+  const color = moduleColors[label] ?? '#3f7cac'
 
   return {
     background: `${color}20`,
@@ -344,7 +439,7 @@ export function buildModuleSubtitle(details) {
   return parts.length > 0 ? parts.join(' 쨌 ') : null
 }
 
-export function getLabelPresentation(label, moduleDetails) {
+export function getLabelPresentation(label, moduleDetails, moduleCodeSet) {
   if (!label) {
     return {
       title: 'Unassigned',
@@ -353,7 +448,7 @@ export function getLabelPresentation(label, moduleDetails) {
     }
   }
 
-  if (!isModuleLabel(label)) {
+  if (!isModuleLabel(label, moduleCodeSet)) {
     return {
       title: label,
       subtitle: 'Custom override',
@@ -361,7 +456,7 @@ export function getLabelPresentation(label, moduleDetails) {
     }
   }
 
-  const details = moduleDetails[label] ?? createDefaultModuleDetails()[label]
+  const details = moduleDetails[label] ?? { subject: '', teacher: '', room: '' }
   return {
     title: details.subject || label,
     subtitle: buildModuleSubtitle(details),
@@ -402,7 +497,7 @@ export function getSuggestedOverrideDate(date) {
   return getDayKey(date) ? date : getNextSchoolDate(date)
 }
 
-export function getStatusCard(now, baseTimetable, overrides, moduleDetails) {
+export function getStatusCard(now, baseTimetable, overrides, moduleDetails, moduleCodeSet) {
   const dayKey = getDayKey(now)
 
   if (!dayKey) {
@@ -424,7 +519,7 @@ export function getStatusCard(now, baseTimetable, overrides, moduleDetails) {
 
   if (currentBlock?.type === 'period') {
     const label = getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, currentBlock.periodIndex)
-    const presentation = getLabelPresentation(label, moduleDetails)
+    const presentation = getLabelPresentation(label, moduleDetails, moduleCodeSet)
     return {
       eyebrow: 'Now',
       headline: presentation.title,
@@ -435,7 +530,7 @@ export function getStatusCard(now, baseTimetable, overrides, moduleDetails) {
 
   if (currentBlock?.type === 'lunch') {
     const nextLabel = getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, 4)
-    const presentation = getLabelPresentation(nextLabel, moduleDetails)
+    const presentation = getLabelPresentation(nextLabel, moduleDetails, moduleCodeSet)
     return {
       eyebrow: 'Lunch',
       headline: 'Midday reset',
@@ -449,7 +544,7 @@ export function getStatusCard(now, baseTimetable, overrides, moduleDetails) {
     const nextLabel = upcomingPeriod === null
       ? null
       : getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, upcomingPeriod)
-    const presentation = getLabelPresentation(nextLabel, moduleDetails)
+    const presentation = getLabelPresentation(nextLabel, moduleDetails, moduleCodeSet)
 
     return {
       eyebrow: currentBlock.label,
@@ -463,7 +558,7 @@ export function getStatusCard(now, baseTimetable, overrides, moduleDetails) {
 
   if (nextBlock?.type === 'period') {
     const nextLabel = getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, nextBlock.periodIndex)
-    const presentation = getLabelPresentation(nextLabel, moduleDetails)
+    const presentation = getLabelPresentation(nextLabel, moduleDetails, moduleCodeSet)
     return {
       eyebrow: 'Up next',
       headline: presentation.title,
@@ -476,7 +571,7 @@ export function getStatusCard(now, baseTimetable, overrides, moduleDetails) {
   const nextSchoolDayKey = getDayKey(nextSchoolDate)
   const nextSchoolDateKey = getDateKey(nextSchoolDate)
   const firstLabel = getEffectiveLabel(baseTimetable, overrides, nextSchoolDayKey, nextSchoolDateKey, 0)
-  const presentation = getLabelPresentation(firstLabel, moduleDetails)
+  const presentation = getLabelPresentation(firstLabel, moduleDetails, moduleCodeSet)
 
   return {
     eyebrow: 'Done for today',

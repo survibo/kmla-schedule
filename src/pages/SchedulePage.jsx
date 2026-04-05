@@ -1,19 +1,23 @@
-import { ScheduleDayCard } from '../components/timetable/WeekGrid.jsx'
+import { ScheduleDayCard } from '../components/WeekGrid.jsx'
 import {
   getDateKey,
   getDayKey,
   getNextSchoolDate,
   getSchoolDateLabel,
   shiftDate,
-} from '../features/timetable/timetableShared.js'
+} from '../features/timetableShared.js'
 
 export function SchedulePage({
   activePeriodIndex,
   baseTimetable,
+  goToBaseSlot,
+  goToOverrideEdit,
   moduleColors,
+  moduleCodeSet,
   moduleDetails,
   overrides,
   resetWeekToToday,
+  selectedCell,
   setWeekAnchor,
   todayKey,
   weekAnchor,
@@ -21,10 +25,13 @@ export function SchedulePage({
   const selectedDate = weekAnchor
   const selectedDateKey = getDateKey(selectedDate)
   const selectedDayKey = getDayKey(selectedDate)
+  const overrideDateKey = selectedDayKey
+    ? selectedDateKey
+    : getDateKey(getNextSchoolDate(selectedDate))
 
   return (
     <section className="grid gap-[0.85rem]">
-      <div className="grid grid-cols-3 justify-start gap-[0.45rem] sm:w-fit" aria-label="Schedule navigation">
+      <div className="grid grid-cols-4 justify-start gap-[0.45rem] sm:w-fit" aria-label="Schedule navigation">
         <button
           type="button"
           className="min-h-10 cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-[rgba(255,248,236,0.88)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
@@ -48,6 +55,13 @@ export function SchedulePage({
         >
           Next
         </button>
+        <button
+          type="button"
+          className="min-h-10 cursor-pointer rounded-full border border-[rgba(31,111,120,0.24)] bg-[rgba(31,111,120,0.12)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
+          onClick={() => goToOverrideEdit(overrideDateKey)}
+        >
+          Override
+        </button>
       </div>
 
       {selectedDayKey ? (
@@ -58,9 +72,13 @@ export function SchedulePage({
           baseTimetable={baseTimetable}
           overrides={overrides}
           moduleColors={moduleColors}
+          moduleCodeSet={moduleCodeSet}
           moduleDetails={moduleDetails}
           todayKey={todayKey}
           activePeriodIndex={activePeriodIndex}
+          editable
+          selectedCell={selectedCell}
+          onCellClick={(dayKey, periodIndex) => goToBaseSlot(dayKey, periodIndex)}
         />
       ) : (
         <section className="grid gap-[0.65rem] rounded-[1.35rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]">
