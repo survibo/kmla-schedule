@@ -26,35 +26,35 @@ function ModuleCard({ module, onRename, onUpdate, onRemove }) {
   }
 
   return (
-    <article className="grid gap-4 rounded-[1.15rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.94)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]">
-      <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <label className="grid gap-1.5">
-          <span className="text-[0.88rem] font-bold text-[var(--muted)]">Code</span>
-          <input
-            type="text"
-            value={codeDraft}
-            className="w-full rounded-[0.95rem] border border-[rgba(20,34,33,0.14)] bg-[rgba(255,252,246,0.94)] px-4 py-[0.85rem] text-[var(--ink)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
-            onChange={(event) => setCodeDraft(event.target.value)}
-            onBlur={commitCodeChange}
-            onKeyDown={(event) => {
-              if (event.key === 'Enter') {
-                event.preventDefault()
-                commitCodeChange()
-              }
-            }}
-          />
-        </label>
+    <article className="rounded-[1.15rem] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]">
+      <div className="grid gap-7">
+        <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
+          <label className="grid flex-1 gap-1.5">
+            <span className="text-[0.88rem] font-bold text-[var(--muted)]">Code</span>
+            <input
+              type="text"
+              value={codeDraft}
+              className="w-full rounded-[0.95rem] border border-[rgba(20,34,33,0.14)] bg-[rgba(255,252,246,0.94)] px-4 py-[0.85rem] text-[var(--ink)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
+              onChange={(event) => setCodeDraft(event.target.value)}
+              onBlur={commitCodeChange}
+              onKeyDown={(event) => {
+                if (event.key === 'Enter') {
+                  event.preventDefault()
+                  commitCodeChange()
+                }
+              }}
+            />
+          </label>
 
-        <button
-          type="button"
-          className="cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-transparent px-4 py-[0.7rem] text-sm font-semibold text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
-          onClick={() => onRemove(module.code)}
-        >
-          Remove
-        </button>
-      </div>
+          <button
+            type="button"
+            className="cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-transparent px-4 py-[0.7rem] text-sm font-semibold text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
+            onClick={() => onRemove(module.code)}
+          >
+            Remove
+          </button>
+        </div>
 
-      <div className="grid gap-4 sm:grid-cols-[minmax(0,1fr)_7rem]">
         <label className="grid gap-1.5">
           <span className="text-[0.88rem] font-bold text-[var(--muted)]">Subject</span>
           <input
@@ -75,9 +75,7 @@ function ModuleCard({ module, onRename, onUpdate, onRemove }) {
             onChange={(event) => onUpdate(module.code, { color: event.target.value })}
           />
         </label>
-      </div>
 
-      <div className="grid gap-4 sm:grid-cols-2">
         <label className="grid gap-1.5">
           <span className="text-[0.88rem] font-bold text-[var(--muted)]">Teacher</span>
           <input

@@ -64,10 +64,16 @@ export function useTimetableApp() {
   )
 
   useEffect(() => {
-    saveStoredValue(STORAGE_KEYS.base, baseTimetable)
-    saveStoredValue(STORAGE_KEYS.overrides, overrides)
-    saveStoredValue(STORAGE_KEYS.modules, moduleDefinitions)
-    setLastSavedAt(new Date())
+    const savedBase = saveStoredValue(STORAGE_KEYS.base, baseTimetable)
+    const savedOverrides = saveStoredValue(STORAGE_KEYS.overrides, overrides)
+    const savedModules = saveStoredValue(STORAGE_KEYS.modules, moduleDefinitions)
+
+    if (savedBase && savedOverrides && savedModules) {
+      setLastSavedAt(new Date())
+      return
+    }
+
+    setLastSavedAt(null)
   }, [baseTimetable, moduleDefinitions, overrides])
 
   useEffect(() => {

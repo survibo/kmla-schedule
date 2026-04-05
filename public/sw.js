@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'timetable-static-v1'
-const RUNTIME_CACHE = 'timetable-runtime-v1'
+const STATIC_CACHE = 'timetable-static-v2'
+const RUNTIME_CACHE = 'timetable-runtime-v2'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',
@@ -8,6 +8,61 @@ const APP_SHELL = [
   '/pwa-192.png',
   '/pwa-512.png',
 ]
+
+function shouldUseNetworkFirst(requestUrl, request) {
+  if (request.mode === 'navigate') {
+    return true
+  }
+
+  if (requestUrl.pathname.startsWith('/assets/')) {
+    return true
+  }
+
+  return ['script', 'style', 'manifest', 'worker'].includes(request.destination)
+}
+
+async function networkFirst(request) {
+  const cache = await caches.open(RUNTIME_CACHE)
+
+  try {
+    const response = await fetch(request)
+
+    if (response && response.ok) {
+      cache.put(request, response.clone())
+    }
+
+    return response
+  } catch {
+    const cachedResponse = await caches.match(request)
+
+    if (cachedResponse) {
+      return cachedResponse
+    }
+
+    if (request.mode === 'navigate') {
+      return caches.match('/')
+    }
+
+    throw new Error('Network unavailable and no cache entry found.')
+  }
+}
+
+async function cacheFirst(request) {
+  const cachedResponse = await caches.match(request)
+
+  if (cachedResponse) {
+    return cachedResponse
+  }
+
+  const response = await fetch(request)
+
+  if (response && response.ok) {
+    const cache = await caches.open(RUNTIME_CACHE)
+    cache.put(request, response.clone())
+  }
+
+  return response
+}
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
@@ -39,33 +94,10 @@ self.addEventListener('fetch', (event) => {
     return
   }
 
-  if (event.request.mode === 'navigate') {
-    event.respondWith(
-      fetch(event.request)
-        .then((response) => {
-          const copy = response.clone()
-          caches.open(RUNTIME_CACHE).then((cache) => cache.put(event.request, copy))
-          return response
-        })
-        .catch(async () => {
-          const cachedPage = await caches.match(event.request)
-          return cachedPage || caches.match('/')
-        }),
-    )
+  if (shouldUseNetworkFirst(requestUrl, event.request)) {
+    event.respondWith(networkFirst(event.request))
     return
   }
 
-  event.respondWith(
-    caches.match(event.request).then((cachedResponse) => {
-      if (cachedResponse) {
-        return cachedResponse
-      }
-
-      return fetch(event.request).then((response) => {
-        const copy = response.clone()
-        caches.open(RUNTIME_CACHE).then((cache) => cache.put(event.request, copy))
-        return response
-      })
-    }),
-  )
+  event.respondWith(cacheFirst(event.request))
 })
