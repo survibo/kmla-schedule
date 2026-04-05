@@ -19,7 +19,7 @@ export function TabBar({ weekPath, modulesPath, changesPath }) {
             ].join(' ')
           }
         >
-          <span>Schedule*</span>
+          <span>Schedule</span>
         </NavLink>
         <NavLink
           to={modulesPath}

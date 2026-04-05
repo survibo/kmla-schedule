@@ -21,6 +21,16 @@ import {
   savePersistentAppState,
 } from './timetableShared.js'
 
+const DEBUG_STORAGE_ALERTS = true
+
+function debugStorageAlert(message) {
+  if (!DEBUG_STORAGE_ALERTS || typeof window === 'undefined') {
+    return
+  }
+
+  window.alert(message)
+}
+
 export function useTimetableApp() {
   const initialAppState = useMemo(() => createDefaultAppState(), [])
   const [baseTimetable, setBaseTimetable] = useState(initialAppState.baseTimetable)
@@ -45,18 +55,25 @@ export function useTimetableApp() {
     let cancelled = false
 
     async function hydratePersistentState() {
-      const persistedState = await loadPersistentAppState()
+      debugStorageAlert('hydrate start')
 
-      if (cancelled) {
-        return
+      try {
+        const persistedState = await loadPersistentAppState()
+
+        if (cancelled) {
+          return
+        }
+
+        setBaseTimetable(persistedState.baseTimetable)
+        setOverrides(persistedState.overrides)
+        setModuleDefinitions(persistedState.moduleDefinitions)
+
+        setSaveStatus('idle')
+        setHasLoadedPersistentState(true)
+        debugStorageAlert('hydrate done')
+      } catch (error) {
+        debugStorageAlert(`hydrate error: ${String(error)}`)
       }
-
-      setBaseTimetable(persistedState.baseTimetable)
-      setOverrides(persistedState.overrides)
-      setModuleDefinitions(persistedState.moduleDefinitions)
-
-      setSaveStatus('idle')
-      setHasLoadedPersistentState(true)
     }
 
     void hydratePersistentState()
@@ -75,23 +92,36 @@ export function useTimetableApp() {
 
     async function persistState() {
       setSaveStatus('saving')
-      const saved = await savePersistentAppState({
-        baseTimetable,
-        overrides,
-        moduleDefinitions,
-      })
+      debugStorageAlert('save start')
 
-      if (cancelled) {
-        return
+      try {
+        const saved = await savePersistentAppState({
+          baseTimetable,
+          overrides,
+          moduleDefinitions,
+        })
+
+        if (cancelled) {
+          return
+        }
+
+        if (saved) {
+          clearLegacyStoredState()
+          void clearLegacyPersistentState()
+        }
+
+        debugStorageAlert(saved ? 'save success' : 'save failed')
+        setSaveStatus(saved ? 'saved' : 'error')
+        setLastSavedAt(saved ? new Date() : null)
+      } catch (error) {
+        if (cancelled) {
+          return
+        }
+
+        debugStorageAlert(`save error: ${String(error)}`)
+        setSaveStatus('error')
+        setLastSavedAt(null)
       }
-
-      if (saved) {
-        clearLegacyStoredState()
-        void clearLegacyPersistentState()
-      }
-
-      setSaveStatus(saved ? 'saved' : 'error')
-      setLastSavedAt(saved ? new Date() : null)
     }
 
     void persistState()
