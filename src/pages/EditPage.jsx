@@ -97,9 +97,11 @@ export function OverridePage({
                         </small>
                       ) : null}
                       
-                      {overrideValue && <small className="text-[var(--muted)]">
-                       Base: ${basePresentation.title}
-                      </small>}
+                      {overrideValue ? (
+                        <small className="text-[var(--muted)]">
+                          Base: {basePresentation.title}
+                        </small>
+                      ) : null}
                     </div>
                   </button>
                 )

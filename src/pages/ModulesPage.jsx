@@ -19,6 +19,7 @@ function ModuleCard({ module, onRename, onUpdate, onRemove }) {
 
   function commitCodeChange() {
     const renamed = onRename(module.code, codeDraft)
+
     if (!renamed) {
       setCodeDraft(module.code)
     }
@@ -27,24 +28,22 @@ function ModuleCard({ module, onRename, onUpdate, onRemove }) {
   return (
     <article className="grid gap-4 rounded-[1.15rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.94)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]">
       <div className="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between">
-        <div className="grid gap-1.5">
-          <label className="grid gap-1.5">
-            <span className="text-[0.88rem] font-bold text-[var(--muted)]">Code</span>
-            <input
-              type="text"
-              value={codeDraft}
-              className="w-full rounded-[0.95rem] border border-[rgba(20,34,33,0.14)] bg-[rgba(255,252,246,0.94)] px-4 py-[0.85rem] text-[var(--ink)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
-              onChange={(event) => setCodeDraft(event.target.value)}
-              onBlur={commitCodeChange}
-              onKeyDown={(event) => {
-                if (event.key === 'Enter') {
-                  event.preventDefault()
-                  event.currentTarget.blur()
-                }
-              }}
-            />
-          </label>
-        </div>
+        <label className="grid gap-1.5">
+          <span className="text-[0.88rem] font-bold text-[var(--muted)]">Code</span>
+          <input
+            type="text"
+            value={codeDraft}
+            className="w-full rounded-[0.95rem] border border-[rgba(20,34,33,0.14)] bg-[rgba(255,252,246,0.94)] px-4 py-[0.85rem] text-[var(--ink)] outline-none focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
+            onChange={(event) => setCodeDraft(event.target.value)}
+            onBlur={commitCodeChange}
+            onKeyDown={(event) => {
+              if (event.key === 'Enter') {
+                event.preventDefault()
+                commitCodeChange()
+              }
+            }}
+          />
+        </label>
 
         <button
           type="button"
@@ -126,11 +125,10 @@ export function ModulesPage({
 
   function handleRemoveModule(moduleCode) {
     const removedIndex = moduleDefinitions.findIndex((module) => module.code === moduleCode)
-    const moduleIsUsed = isModuleUsed(moduleCode, baseTimetable, overrides)
 
-    if (moduleIsUsed) {
+    if (isModuleUsed(moduleCode, baseTimetable, overrides)) {
       const confirmed = window.confirm(
-        '이 모듈은 이미 스케줄이나 override에서 사용 중입니다.\n삭제하면 해당 칸들은 과목명 텍스트로 바뀝니다.\n그래도 삭제할까요?',
+        'This module is already used in the schedule or overrides.\nDeleting it will convert those cells to plain text.\nDelete anyway?',
       )
 
       if (!confirmed) {
@@ -152,14 +150,14 @@ export function ModulesPage({
     <section className="grid gap-4 rounded-[1.2rem] bg-[rgba(255,250,240,0.86)] p-4">
       <div className="flex flex-col gap-3 min-[900px]:flex-row min-[900px]:items-start min-[900px]:justify-between">
         <div className="grid flex-1 gap-3">
-          <div className="flex flex-wrap gap-2">
+          <div className="flex flex-wrap items-center gap-2">
             {hasModules ? (
               moduleDefinitions.map((module, index) => (
                 <button
                   key={module.code}
                   type="button"
                   className={[
-                    'min-w-[5rem] cursor-pointer rounded-[0.5rem] border p-2 text-left transition-colors focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]',
+                    'min-h-[1rem] min-w-[5rem] cursor-pointer justify-center rounded-[0.5rem] border p-2 text-left transition-colors focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]',
                     index === currentIndex
                       ? 'border-[rgba(31,111,120,0.3)] bg-[rgba(31,111,120,0.16)]'
                       : 'border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.92)]',

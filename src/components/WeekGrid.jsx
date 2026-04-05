@@ -160,7 +160,7 @@ export function ScheduleDayCard({
   return (
     <section
       className={[
-        'grid gap-[0.9rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]',
+        'grid gap-[0.9rem] border rounded-[1rem] border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]',
         isToday ? 'border-[rgba(31,111,120,0.35)] shadow-[0_0_0_3px_rgba(31,111,120,0.08)]' : '',
       ].join(' ')}
     >

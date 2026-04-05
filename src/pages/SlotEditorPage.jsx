@@ -156,9 +156,7 @@ export function SlotEditorPage({
             <h3 className="font-serif text-[1.15rem] leading-[1.05] text-[var(--ink)]">
               Override label
             </h3>
-            <p className="text-[var(--muted)]">
-              대부분 override는 특수 일정이니까, 우선 자유 텍스트로 바로 적을 수 있게 했습니다.
-            </p>
+      
           </div>
 
           <label className="grid gap-1.5">

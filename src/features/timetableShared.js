@@ -216,6 +216,7 @@ export function normalizeModuleDefinitions(value, legacyColors = {}, legacyDetai
     teacher: legacyDetails[module.code]?.teacher ?? module.teacher,
     room: legacyDetails[module.code]?.room ?? module.room,
   }))
+  const fallbackByCode = Object.fromEntries(fallback.map((module) => [module.code, module]))
 
   if (!Array.isArray(value)) {
     return fallback
@@ -234,14 +235,25 @@ export function normalizeModuleDefinitions(value, legacyColors = {}, legacyDetai
       }
 
       seen.add(code)
-      const fallbackColor = fallback[index]?.color ?? '#3f7cac'
+      const fallbackModule = fallbackByCode[code] ?? fallback[index] ?? null
 
       return {
         code,
-        color: isHexColor(module.color) ? module.color : fallbackColor,
-        subject: cleanLabel(module.subject) ?? '',
-        teacher: cleanLabel(module.teacher) ?? '',
-        room: cleanLabel(module.room) ?? '',
+        color: isHexColor(module.color)
+          ? module.color
+          : legacyColors[code] ?? fallbackModule?.color ?? '#3f7cac',
+        subject: cleanLabel(module.subject)
+          ?? legacyDetails[code]?.subject
+          ?? fallbackModule?.subject
+          ?? '',
+        teacher: cleanLabel(module.teacher)
+          ?? legacyDetails[code]?.teacher
+          ?? fallbackModule?.teacher
+          ?? '',
+        room: cleanLabel(module.room)
+          ?? legacyDetails[code]?.room
+          ?? fallbackModule?.room
+          ?? '',
       }
     })
     .filter(Boolean)
@@ -436,7 +448,7 @@ export function getModulePalette(label, moduleColors, moduleCodeSet) {
 
 export function buildModuleSubtitle(details) {
   const parts = [details.room, details.teacher].filter(Boolean)
-  return parts.length > 0 ? parts.join(' 쨌 ') : null
+  return parts.length > 0 ? parts.join(' · ') : null
 }
 
 export function getLabelPresentation(label, moduleDetails, moduleCodeSet) {

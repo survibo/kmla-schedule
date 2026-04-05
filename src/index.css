@@ -18,12 +18,15 @@
 
 @layer base {
   html {
+    min-height: 100%;
     scroll-behavior: smooth;
   }
 
   body {
+    margin: 0;
     min-width: 320px;
-    min-height: 100vh;
+    min-height: 100%;
+    overflow: hidden;
     background:
       radial-gradient(circle at top, rgba(242, 143, 59, 0.2), transparent 30%),
       linear-gradient(180deg, #f4efe3 0%, #efe8d8 100%);
@@ -38,7 +41,16 @@
   }
 
   #root {
-    min-height: 100vh;
+    min-height: 100%;
+  }
+
+  .app-scroll {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+
+  .app-scroll::-webkit-scrollbar {
+    display: none;
   }
 
   h1,

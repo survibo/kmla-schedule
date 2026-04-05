@@ -176,8 +176,8 @@ export function AppRoutes() {
   }
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 pb-28 sm:px-6 min-[860px]:pb-8 min-[860px]:pt-6">
-      <main className="flex-1">
+    <div className="mx-auto flex h-dvh w-full max-w-6xl flex-col overflow-hidden px-4 pt-4 sm:px-6 min-[860px]:pt-6">
+      <main className="app-scroll min-h-0 flex-1 overflow-y-auto pb-4">
         <Routes>
           <Route
             path={APP_PATHS.week}
