@@ -38,11 +38,27 @@ export function SlotEditorPage({
     }
 
     if (editorScope === 'base') {
+      if (
+        selectedCell?.scope === 'base' &&
+        selectedCell.dayKey === baseRouteDayKey &&
+        selectedCell.periodIndex === slotPeriodIndex
+      ) {
+        return
+      }
+
       openBaseCell(baseRouteDayKey, slotPeriodIndex)
       return
     }
 
     if (overrideDayKey) {
+      if (
+        selectedCell?.scope === 'override' &&
+        selectedCell.dateKey === overrideRouteDate &&
+        selectedCell.periodIndex === slotPeriodIndex
+      ) {
+        return
+      }
+
       openOverrideCell(overrideRouteDate, overrideDayKey, slotPeriodIndex)
     }
   }, [
@@ -52,6 +68,7 @@ export function SlotEditorPage({
     openOverrideCell,
     overrideDayKey,
     overrideRouteDate,
+    selectedCell,
     slotPeriodIndex,
   ])
 
