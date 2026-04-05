@@ -496,7 +496,10 @@ export async function loadPersistentAppState() {
   const snapshot = await loadPersistentValue(APP_STATE_RECORD_KEY)
 
   if (snapshot) {
-    return normalizeAppState(snapshot)
+    return {
+      appState: normalizeAppState(snapshot),
+      shouldResave: false,
+    }
   }
 
   const legacyPersistentValues = await Promise.all([
@@ -510,13 +513,16 @@ export async function loadPersistentAppState() {
   if (legacyPersistentValues.some((value) => value !== null)) {
     const [baseTimetable, overrides, moduleDefinitions, moduleColors, moduleDetails] = legacyPersistentValues
 
-    return normalizeAppState({
-      baseTimetable,
-      overrides,
-      moduleDefinitions,
-      moduleColors,
-      moduleDetails,
-    })
+    return {
+      appState: normalizeAppState({
+        baseTimetable,
+        overrides,
+        moduleDefinitions,
+        moduleColors,
+        moduleDetails,
+      }),
+      shouldResave: true,
+    }
   }
 
   const localSnapshot = loadStoredValue(
@@ -526,10 +532,16 @@ export async function loadPersistentAppState() {
   )
 
   if (localSnapshot) {
-    return localSnapshot
+    return {
+      appState: localSnapshot,
+      shouldResave: true,
+    }
   }
 
-  return loadLegacyAppState()
+  return {
+    appState: loadLegacyAppState(),
+    shouldResave: false,
+  }
 }
 
 export async function savePersistentAppState(appState) {
@@ -537,6 +549,7 @@ export async function savePersistentAppState(appState) {
   const persisted = await savePersistentValue(APP_STATE_RECORD_KEY, normalizedState)
 
   if (persisted) {
+    removeStoredValue(APP_STATE_RECORD_KEY)
     return true
   }
 

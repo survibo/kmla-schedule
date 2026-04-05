@@ -36,17 +36,21 @@ export function useTimetableApp() {
   const [lastSavedAt, setLastSavedAt] = useState(null)
   const [saveStatus, setSaveStatus] = useState('loading')
   const [hasLoadedPersistentState, setHasLoadedPersistentState] = useState(false)
+  const [saveRequestId, setSaveRequestId] = useState(0)
   const { moduleColors, moduleDetails, moduleCodeSet } = useMemo(
     () => buildModuleMaps(moduleDefinitions),
     [moduleDefinitions],
   )
+  const queueSave = useCallback(() => {
+    setSaveRequestId((current) => current + 1)
+  }, [])
 
   useEffect(() => {
     let cancelled = false
 
     async function hydratePersistentState() {
       try {
-        const persistedState = await loadPersistentAppState()
+        const { appState: persistedState, shouldResave } = await loadPersistentAppState()
 
         if (cancelled) {
           return
@@ -58,8 +62,16 @@ export function useTimetableApp() {
 
         setSaveStatus('idle')
         setHasLoadedPersistentState(true)
+        if (shouldResave) {
+          setSaveRequestId((current) => current + 1)
+        }
       } catch {
+        if (cancelled) {
+          return
+        }
+
         setSaveStatus('error')
+        setHasLoadedPersistentState(true)
       }
     }
 
@@ -71,11 +83,14 @@ export function useTimetableApp() {
   }, [])
 
   useEffect(() => {
-    if (!hasLoadedPersistentState) {
+    if (!hasLoadedPersistentState || saveRequestId === 0) {
       return
     }
 
     let cancelled = false
+    const timer = window.setTimeout(() => {
+      void persistState()
+    }, 250)
 
     async function persistState() {
       setSaveStatus('saving')
@@ -108,16 +123,16 @@ export function useTimetableApp() {
       }
     }
 
-    void persistState()
-
     return () => {
       cancelled = true
+      window.clearTimeout(timer)
     }
   }, [
     baseTimetable,
     hasLoadedPersistentState,
     moduleDefinitions,
     overrides,
+    saveRequestId,
   ])
 
   useEffect(() => {
@@ -181,13 +196,15 @@ export function useTimetableApp() {
   }, [])
 
   const updateBaseCell = useCallback((dayKey, periodIndex, nextValue) => {
+    queueSave()
     setBaseTimetable((current) => ({
       ...current,
       [dayKey]: current[dayKey].map((value, index) => (index === periodIndex ? nextValue : value)),
     }))
-  }, [])
+  }, [queueSave])
 
   const updateOverride = useCallback((dateKey, periodIndex, nextValue) => {
+    queueSave()
     setOverrides((current) => {
       const dayOverrides = { ...(current[dateKey] ?? {}) }
       const periodKey = String(periodIndex + 1)
@@ -208,16 +225,18 @@ export function useTimetableApp() {
         [dateKey]: dayOverrides,
       }
     })
-  }, [])
+  }, [queueSave])
 
   const addModule = useCallback(() => {
+    queueSave()
     setModuleDefinitions((current) => [
       ...current,
       createModuleDefinition(getNextModuleCode(current)),
     ])
-  }, [])
+  }, [queueSave])
 
   const updateModule = useCallback((moduleCode, updates) => {
+    queueSave()
     setModuleDefinitions((current) =>
       current.map((module) => (
         module.code === moduleCode
@@ -229,7 +248,7 @@ export function useTimetableApp() {
           : module
       )),
     )
-  }, [])
+  }, [queueSave])
 
   const renameModule = useCallback((moduleCode, nextCodeValue) => {
     const nextCode = cleanModuleCode(nextCodeValue)
@@ -281,13 +300,15 @@ export function useTimetableApp() {
     )
 
     setDraftModule((current) => (current === moduleCode ? nextCode : current))
+    queueSave()
 
     return true
-  }, [])
+  }, [queueSave])
 
   const removeModule = useCallback((moduleCode) => {
     const removedModule = moduleDefinitions.find((module) => module.code === moduleCode)
     const fallbackLabel = removedModule?.subject || moduleCode
+    queueSave()
 
     setModuleDefinitions((current) =>
       current.filter((module) => module.code !== moduleCode),
@@ -317,7 +338,7 @@ export function useTimetableApp() {
     )
 
     setDraftModule((current) => (current === moduleCode ? '' : current))
-  }, [moduleDefinitions])
+  }, [moduleDefinitions, queueSave])
 
   const removeOverride = useCallback((dateKey, periodIndex) => {
     updateOverride(dateKey, periodIndex, null)
