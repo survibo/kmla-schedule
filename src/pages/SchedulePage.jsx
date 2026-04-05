@@ -81,7 +81,7 @@ export function SchedulePage({
           onCellClick={(dayKey, periodIndex) => goToBaseSlot(dayKey, periodIndex)}
         />
       ) : (
-        <section className="grid gap-[0.65rem] rounded-[1.35rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]">
+        <section className="grid gap-[0.65rem] rounded-[1rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
             <div>
               <p className="text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[var(--accent)]">

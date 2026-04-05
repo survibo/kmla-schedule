@@ -157,7 +157,7 @@ export function ModulesPage({
                   key={module.code}
                   type="button"
                   className={[
-                    'min-h-[1rem] min-w-[5rem] cursor-pointer justify-center rounded-[0.5rem] border p-2 text-left transition-colors focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]',
+                    'min-h-[1rem] min-w-[3rem] cursor-pointer justify-center rounded-[0.5rem] border p-2 text-left transition-colors focus-visible:outline focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]',
                     index === currentIndex
                       ? 'border-[rgba(31,111,120,0.3)] bg-[rgba(31,111,120,0.16)]'
                       : 'border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.92)]',
@@ -169,7 +169,7 @@ export function ModulesPage({
                     {module.subject ? ` - ${module.subject}` : ''}
                   </span>
                   <span className="mt-1 block text-[0.82rem] text-[var(--muted)]">
-                    {module.teacher || 'Teacher not set'}
+                    {module.teacher || null}
                   </span>
                 </button>
               ))
