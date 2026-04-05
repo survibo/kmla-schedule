@@ -81,7 +81,7 @@ export function SlotEditorPage({
 
   function handleClearAndBack() {
     handleClearSelection()
-    
+
     if (editorScope === 'base') {
       goToWeek()
       return
@@ -156,7 +156,6 @@ export function SlotEditorPage({
             <h3 className="font-serif text-[1.15rem] leading-[1.05] text-[var(--ink)]">
               Override label
             </h3>
-      
           </div>
 
           <label className="grid gap-1.5">
@@ -174,7 +173,7 @@ export function SlotEditorPage({
           </label>
 
           <div className="rounded-[0.95rem] border border-dashed border-[rgba(20,34,33,0.12)] bg-[rgba(20,34,33,0.03)] px-4 py-3 text-sm text-[var(--muted)]">
-            모듈로 넣고 싶으면 아래에서 선택하면 됩니다.
+            If you want to use a module instead, choose one below.
           </div>
         </div>
       ) : null}
@@ -225,14 +224,7 @@ export function SlotEditorPage({
         </div>
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-3">
-        <button
-          type="button"
-          className="cursor-pointer rounded-full border border-transparent bg-[rgba(20,34,33,0.06)] px-4 py-[0.7rem] text-sm font-semibold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
-          onClick={navigateBack}
-        >
-          Cancel
-        </button>
+      <div className="grid gap-3 sm:grid-cols-2">
         <button
           type="button"
           className="cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-transparent px-4 py-[0.7rem] text-sm font-semibold text-[var(--text)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"

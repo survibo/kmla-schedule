@@ -34,7 +34,7 @@ export function SchedulePage({
       <div className="grid grid-cols-4 justify-start gap-[0.45rem] sm:w-fit" aria-label="Schedule navigation">
         <button
           type="button"
-          className="min-h-10 cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-[rgba(255,248,236,0.88)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
+          className="min-h-10 cursor-pointer rounded-[0.8rem] border border-[rgba(20,34,33,0.12)] bg-[rgba(255,248,236,0.88)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
           onClick={() => setWeekAnchor((current) => shiftDate(current, -1))}
           aria-label="Previous day"
         >
@@ -42,14 +42,14 @@ export function SchedulePage({
         </button>
         <button
           type="button"
-          className="min-h-10 cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-[rgba(255,248,236,0.88)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
+          className="min-h-10 cursor-pointer rounded-[0.8rem] border border-[rgba(20,34,33,0.12)] bg-[rgba(255,248,236,0.88)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
           onClick={resetWeekToToday}
         >
           Today
         </button>
         <button
           type="button"
-          className="min-h-10 cursor-pointer rounded-full border border-[rgba(20,34,33,0.12)] bg-[rgba(255,248,236,0.88)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
+          className="min-h-10 cursor-pointer rounded-[0.8rem] border border-[rgba(20,34,33,0.12)] bg-[rgba(255,248,236,0.88)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px"
           onClick={() => setWeekAnchor((current) => shiftDate(current, 1))}
           aria-label="Next day"
         >
@@ -57,7 +57,7 @@ export function SchedulePage({
         </button>
         <button
           type="button"
-          className="min-h-10 cursor-pointer rounded-full border border-[rgba(31,111,120,0.24)] bg-[rgba(31,111,120,0.12)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
+          className="min-h-10 cursor-pointer rounded-[0.8rem] border border-[rgba(31,111,120,0.24)] bg-[rgba(31,111,120,0.12)] px-3 py-2 text-[0.86rem] font-bold text-[var(--ink)] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)]"
           onClick={() => goToOverrideEdit(overrideDateKey)}
         >
           Override
