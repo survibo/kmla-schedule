@@ -1,0 +1,28 @@
+{
+  "name": "Timetable PWA",
+  "short_name": "Timetable",
+  "description": "Weekly timetable with editable base schedule and date-specific overrides.",
+  "theme_color": "#1f6f78",
+  "background_color": "#f4efe3",
+  "display": "standalone",
+  "start_url": "/",
+  "scope": "/",
+  "icons": [
+    {
+      "src": "/pwa-192.png",
+      "sizes": "192x192",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png"
+    },
+    {
+      "src": "/pwa-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ]
+}
