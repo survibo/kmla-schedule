@@ -34,6 +34,7 @@ export function useTimetableApp() {
   const [weekFocusIndex, setWeekFocusIndex] = useState(() => (initialSchoolDayIndex >= 0 ? initialSchoolDayIndex : 0))
   const [now, setNow] = useState(() => new Date())
   const [lastSavedAt, setLastSavedAt] = useState(null)
+  const [saveStatus, setSaveStatus] = useState('loading')
   const [hasLoadedPersistentState, setHasLoadedPersistentState] = useState(false)
   const { moduleColors, moduleDetails, moduleCodeSet } = useMemo(
     () => buildModuleMaps(moduleDefinitions),
@@ -54,6 +55,7 @@ export function useTimetableApp() {
       setOverrides(persistedState.overrides)
       setModuleDefinitions(persistedState.moduleDefinitions)
 
+      setSaveStatus('idle')
       setHasLoadedPersistentState(true)
     }
 
@@ -72,6 +74,7 @@ export function useTimetableApp() {
     let cancelled = false
 
     async function persistState() {
+      setSaveStatus('saving')
       const saved = await savePersistentAppState({
         baseTimetable,
         overrides,
@@ -87,6 +90,7 @@ export function useTimetableApp() {
         void clearLegacyPersistentState()
       }
 
+      setSaveStatus(saved ? 'saved' : 'error')
       setLastSavedAt(saved ? new Date() : null)
     }
 
@@ -101,6 +105,18 @@ export function useTimetableApp() {
     moduleDefinitions,
     overrides,
   ])
+
+  useEffect(() => {
+    if (saveStatus !== 'saved') {
+      return
+    }
+
+    const timer = window.setTimeout(() => {
+      setSaveStatus('idle')
+    }, 1800)
+
+    return () => window.clearTimeout(timer)
+  }, [saveStatus])
 
   useEffect(() => {
     const timer = window.setInterval(() => {
@@ -384,6 +400,7 @@ export function useTimetableApp() {
     renameModule,
     resetEditorDrafts,
     resetWeekToToday,
+    saveStatus,
     selectedCell,
     setDraftCustomLabel,
     setDraftModule,

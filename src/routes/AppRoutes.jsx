@@ -154,7 +154,7 @@ function useAppRouting({
 
 export function AppRoutes() {
   const app = useTimetableApp()
-  const { now, resetEditorDrafts, todayDayKey } = app
+  const { now, resetEditorDrafts, saveStatus, todayDayKey } = app
   const routing = useAppRouting({
     dayKeys: ['Mon', 'Tue', 'Wed', 'Thu', 'Fri'],
     fallbackDayKey: 'Mon',
@@ -177,6 +177,28 @@ export function AppRoutes() {
 
   return (
     <div className="mx-auto flex h-dvh w-full max-w-6xl flex-col overflow-hidden px-4 pt-4 sm:px-6 min-[860px]:pt-6">
+      {saveStatus !== 'idle' && saveStatus !== 'loading' ? (
+        <div className="pointer-events-none fixed inset-x-4 top-3 z-30 flex justify-center sm:inset-x-6 sm:top-4">
+          <div
+            className={[
+              'rounded-full px-4 py-2 text-sm font-semibold shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.12)]',
+              saveStatus === 'saving'
+                ? 'bg-[rgba(36,93,98,0.92)] text-[rgb(255,248,236)]'
+                : '',
+              saveStatus === 'saved'
+                ? 'bg-[rgba(48,110,73,0.92)] text-[rgb(255,248,236)]'
+                : '',
+              saveStatus === 'error'
+                ? 'bg-[rgba(150,47,47,0.94)] text-[rgb(255,248,236)]'
+                : '',
+            ].join(' ')}
+          >
+            {saveStatus === 'saving' ? 'Saving...' : ''}
+            {saveStatus === 'saved' ? 'Saved' : ''}
+            {saveStatus === 'error' ? 'Save failed on this device' : ''}
+          </div>
+        </div>
+      ) : null}
       <main className="app-scroll min-h-0 flex-1 overflow-y-auto pb-4">
         <Routes>
           <Route
