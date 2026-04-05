@@ -33,33 +33,34 @@ export function AppRoutes() {
   }
 
   return (
-    <>
-      <Routes>
-        <Route
-          path={APP_PATHS.week}
-          element={<SchedulePage {...routeProps} />}
-        />
-        <Route
-          path={APP_PATHS.edit}
-          element={<EditPage {...routeProps} />}
-        />
-        <Route
-          path={APP_PATHS.editSlot}
-          element={<SlotEditorPage {...routeProps} />}
-        />
-        <Route
-          path={APP_PATHS.changes}
-          element={
-            <ChangesPage
-              {...routeProps}
-              jumpToOverridesEdit={jumpToOverridesEdit}
-            />
-          }
-        />
-        <Route path="*" element={<Navigate to={APP_PATHS.week} replace />} />
-      </Routes>
-
+    <div className="mx-auto flex min-h-screen w-full max-w-6xl flex-col gap-4 px-4 pb-28 pt-4 sm:px-6 min-[860px]:pb-8 min-[860px]:pt-6">
+      <main className="flex-1">
+        <Routes>
+          <Route
+            path={APP_PATHS.week}
+            element={<SchedulePage {...routeProps} />}
+          />
+          <Route
+            path={APP_PATHS.edit}
+            element={<EditPage {...routeProps} />}
+          />
+          <Route
+            path={APP_PATHS.editSlot}
+            element={<SlotEditorPage {...routeProps} />}
+          />
+          <Route
+            path={APP_PATHS.changes}
+            element={
+              <ChangesPage
+                {...routeProps}
+                jumpToOverridesEdit={jumpToOverridesEdit}
+              />
+            }
+          />
+          <Route path="*" element={<Navigate to={APP_PATHS.week} replace />} />
+        </Routes>
+      </main>
       <TabBar editTabPath={routing.editTabPath} />
-    </>
+    </div>
   )
 }

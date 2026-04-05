@@ -22,7 +22,7 @@ export function WeekGrid({
 }) {
   return (
     <>
-      <div className="week-mobile-focus">
+      <div className="grid gap-[0.9rem] min-[860px]:hidden">
         {weekDates.map((date, dayIndex) => {
           const dateKey = getDateKey(date)
           const dayKey = DAYS[dayIndex].key
@@ -47,9 +47,13 @@ export function WeekGrid({
         })}
       </div>
 
-      <div className="week-grid-wrap week-desktop-grid">
-        <div className="week-grid" role="table" aria-label="Weekly timetable">
-          <div className="grid-corner">
+      <div className="hidden overflow-x-auto pb-1 min-[860px]:block">
+        <div
+          className="grid min-w-[46rem] auto-rows-[minmax(4.8rem,auto)] grid-cols-[6rem_repeat(5,minmax(7rem,1fr))] gap-[0.55rem]"
+          role="table"
+          aria-label="Weekly timetable"
+        >
+          <div className="grid min-h-[4.6rem] content-center gap-1 rounded-[1.2rem] border border-[var(--border)] bg-[rgba(255,247,235,0.92)] p-[0.85rem]">
             <span>Period</span>
           </div>
 
@@ -60,11 +64,16 @@ export function WeekGrid({
             return (
               <div
                 key={dateKey}
-                className={`day-header ${isToday ? 'today' : ''}`}
+                className={[
+                  'grid min-h-[4.6rem] content-center gap-1 rounded-[1.2rem] border border-[var(--border)] bg-[rgba(255,247,235,0.92)] p-[0.85rem]',
+                  isToday ? 'shadow-[inset_0_0_0_2px_rgba(31,111,120,0.15)]' : '',
+                ].join(' ')}
                 style={{ gridColumn: index + 2, gridRow: 1 }}
               >
                 <strong>{DAYS[index].label}</strong>
-                <span>{date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}</span>
+                <span className="text-[var(--muted)]">
+                  {date.toLocaleDateString(undefined, { month: 'numeric', day: 'numeric' })}
+                </span>
               </div>
             )
           })}
@@ -87,13 +96,21 @@ export function WeekGrid({
             />
           ))}
 
-          <div className="time-cell lunch-time" style={{ gridColumn: 1, gridRow: 6 }}>
+          <div
+            className="grid content-center gap-[0.2rem] rounded-[1.2rem] border border-[var(--border)] bg-[rgba(255,247,235,0.92)] p-[0.85rem]"
+            style={{ gridColumn: 1, gridRow: 6 }}
+          >
             <span>Lunch</span>
-            <small>12:30 - 13:30</small>
+            <small className="text-[var(--muted)]">12:30 - 13:30</small>
           </div>
-          <div className="lunch-row" style={{ gridColumn: '2 / span 5', gridRow: 6 }}>
+          <div
+            className="grid content-center gap-[0.3rem] rounded-[1.2rem] border border-[var(--border)] bg-[rgba(255,247,235,0.92)] p-[0.9rem_1rem]"
+            style={{ gridColumn: '2 / span 5', gridRow: 6 }}
+          >
             <strong>Lunch break</strong>
-            <span>12:20 - 12:30 buffer, lunch from 12:30 - 13:30, class resumes at 13:40.</span>
+            <span className="text-[var(--muted)]">
+              12:20 - 12:30 buffer, lunch from 12:30 - 13:30, class resumes at 13:40.
+            </span>
           </div>
 
           {PERIODS.slice(4).map((period, rowIndex) => (
@@ -137,11 +154,19 @@ export function ScheduleDayCard({
   const dayLabel = DAYS.find((day) => day.key === dayKey)?.label
 
   return (
-    <section className={`day-card ${isToday ? 'today' : ''} ${editable ? 'editable' : ''}`}>
-      <div className="day-card-header">
+    <section
+      className={[
+        'grid gap-[0.9rem] rounded-[1.35rem] border border-[rgba(20,34,33,0.08)] bg-[rgba(255,252,246,0.96)] p-4 shadow-[0_0.6rem_1.4rem_rgba(24,49,47,0.06)]',
+        isToday ? 'border-[rgba(31,111,120,0.35)] shadow-[0_0_0_3px_rgba(31,111,120,0.08)]' : '',
+        editable ? 'border-dashed' : '',
+      ].join(' ')}
+    >
+      <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
         <div>
-          <p className="eyebrow">{editable ? 'Tap a period to edit' : dayLabel}</p>
-          <h3>
+          <p className="text-[0.78rem] font-bold uppercase tracking-[0.12em] text-[var(--accent)]">
+            {editable ? 'Tap a period to edit' : dayLabel}
+          </p>
+          <h3 className="font-serif text-[1.15rem] leading-[1.05] text-[var(--ink)]">
             {date.toLocaleDateString(undefined, {
               weekday: editable ? 'short' : undefined,
               month: 'long',
@@ -149,13 +174,21 @@ export function ScheduleDayCard({
             })}
           </h3>
         </div>
-        <div className="day-card-badges">
-          {editable ? <span className="today-pill neutral">Edit mode</span> : null}
-          {isToday ? <span className="today-pill">Today</span> : null}
+        <div className="flex flex-wrap gap-[0.4rem] max-sm:justify-start sm:justify-end">
+          {editable ? (
+            <span className="inline-flex items-center justify-center rounded-full bg-[rgba(20,34,33,0.08)] px-[0.65rem] py-[0.3rem] text-[0.75rem] font-extrabold uppercase tracking-[0.04em] text-[var(--muted)]">
+              Edit mode
+            </span>
+          ) : null}
+          {isToday ? (
+            <span className="inline-flex items-center justify-center rounded-full bg-[rgba(31,111,120,0.12)] px-[0.65rem] py-[0.3rem] text-[0.75rem] font-extrabold uppercase tracking-[0.04em] text-[var(--accent)]">
+              Today
+            </span>
+          ) : null}
         </div>
       </div>
 
-      <div className="day-card-periods">
+      <div className="grid gap-3">
         {PERIODS.map((period) => {
           const label = getEffectiveLabel(baseTimetable, overrides, dayKey, dateKey, period.number - 1)
           const presentation = getLabelPresentation(label, moduleDetails)
@@ -167,33 +200,34 @@ export function ScheduleDayCard({
             selectedCell.dayKey === dayKey &&
             selectedCell.periodIndex === period.number - 1
           const palette = getModulePalette(label, moduleColors)
-          const classes = [
-            'day-period-row',
-            editable ? 'editable' : '',
-            isLive ? 'live' : '',
-            hasOverride ? 'overridden' : '',
-            isSelected ? 'selected' : '',
-          ]
-            .filter(Boolean)
-            .join(' ')
 
           const content = (
             <>
-              <div className="day-period-time">
-                <strong>{period.label}</strong>
-                <span>
+              <div className="flex gap-1">
+                <strong className="text-[0.92rem] text-[var(--ink)]">{period.label}</strong>
+                <span className="text-[0.75rem] leading-[1.25] text-[var(--muted)]">
                   {period.start} - {period.end}
                 </span>
               </div>
-              <div className="day-period-main">
-                <span className="day-period-title">{presentation.title}</span>
+              <div className="grid min-w-0 gap-1">
+                <span className="font-extrabold leading-[1.2]">{presentation.title}</span>
                 {presentation.subtitle ? (
-                  <small className="day-period-meta">{presentation.subtitle}</small>
+                  <small className="text-[0.78rem] leading-[1.25] opacity-[0.82]">
+                    {presentation.subtitle}
+                  </small>
                 ) : null}
               </div>
-              <div className="day-period-flags">
-                {isLive ? <small className="live-pill">Now</small> : null}
-                {hasOverride ? <small className="override-badge">Override</small> : null}
+              <div className="grid gap-[0.35rem] justify-self-start max-sm:grid-flow-col sm:justify-items-end">
+                {isLive ? (
+                  <small className="inline-flex items-center justify-center rounded-full bg-[rgba(31,111,120,0.14)] px-[0.65rem] py-[0.3rem] text-[0.75rem] font-extrabold uppercase tracking-[0.04em] text-[var(--accent)]">
+                    Now
+                  </small>
+                ) : null}
+                {hasOverride ? (
+                  <small className="w-fit rounded-full bg-[rgba(20,34,33,0.08)] px-[0.45rem] py-[0.18rem] text-[0.72rem] font-bold uppercase tracking-[0.04em]">
+                    Override
+                  </small>
+                ) : null}
               </div>
             </>
           )
@@ -203,7 +237,14 @@ export function ScheduleDayCard({
               <button
                 key={period.number}
                 type="button"
-                className={classes}
+                className={[
+                  'grid grid-cols-1 items-center gap-[0.8rem] rounded-[1rem] border-[1.5px] p-[0.85rem] text-left max-sm:items-start sm:grid-cols-[minmax(4.2rem,4.8rem)_minmax(0,1fr)_auto] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
+                  hasOverride ? 'border-dashed' : '',
+                  isSelected ? 'shadow-[0_0_0_3px_rgba(47,124,172,0.16)]' : '',
+                  !isSelected && isLive
+                    ? 'shadow-[inset_0_0_0_2px_rgba(31,111,120,0.55),0_0_0_4px_rgba(31,111,120,0.06)]'
+                    : '',
+                ].join(' ')}
                 style={{
                   background: palette.background,
                   borderColor: palette.border,
@@ -219,7 +260,14 @@ export function ScheduleDayCard({
           return (
             <div
               key={period.number}
-              className={classes}
+              className={[
+                'grid grid-cols-1 items-center gap-[0.8rem] rounded-[1rem] border-[1.5px] p-[0.85rem] text-left max-sm:items-start sm:grid-cols-[minmax(4.2rem,4.8rem)_minmax(0,1fr)_auto]',
+                hasOverride ? 'border-dashed' : '',
+                isSelected ? 'shadow-[0_0_0_3px_rgba(47,124,172,0.16)]' : '',
+                !isSelected && isLive
+                  ? 'shadow-[inset_0_0_0_2px_rgba(31,111,120,0.55),0_0_0_4px_rgba(31,111,120,0.06)]'
+                  : '',
+              ].join(' ')}
               style={{
                 background: palette.background,
                 borderColor: palette.border,
@@ -232,9 +280,11 @@ export function ScheduleDayCard({
         })}
       </div>
 
-      <div className="day-card-lunch">
-        <strong>Lunch</strong>
-        <span>12:20 - 12:30 buffer, lunch 12:30 - 13:30</span>
+      <div className="flex flex-col items-start justify-between gap-[0.8rem] rounded-[1rem] bg-[rgba(255,239,214,0.62)] px-[0.9rem] py-[0.8rem] sm:flex-row sm:items-center">
+        <strong className="text-[var(--ink)]">Lunch</strong>
+        <span className="text-[0.82rem] text-[var(--muted)] sm:text-right">
+          12:20 - 12:30 buffer, lunch 12:30 - 13:30
+        </span>
       </div>
     </section>
   )
@@ -256,9 +306,12 @@ function PeriodRow({
 }) {
   return (
     <>
-      <div className="time-cell" style={{ gridColumn: 1, gridRow: rowIndex }}>
+      <div
+        className="grid content-center gap-[0.2rem] rounded-[1.2rem] border border-[var(--border)] bg-[rgba(255,247,235,0.92)] p-[0.85rem]"
+        style={{ gridColumn: 1, gridRow: rowIndex }}
+      >
         <span>{period.label}</span>
-        <small>
+        <small className="text-[var(--muted)]">
           {period.start} - {period.end}
         </small>
       </div>
@@ -277,26 +330,22 @@ function PeriodRow({
           selectedCell.dayKey === dayKey &&
           selectedCell.periodIndex === period.number - 1
         const palette = getModulePalette(label, moduleColors)
-        const classes = [
-          'grid-cell',
-          editable ? 'editable' : '',
-          isToday ? 'today' : '',
-          isLive ? 'live' : '',
-          hasOverride ? 'overridden' : '',
-          isSelected ? 'selected' : '',
-        ]
-          .filter(Boolean)
-          .join(' ')
 
         const content = (
           <>
-            <div className="grid-cell-copy">
-              <span className="grid-cell-label">{presentation.title}</span>
+            <div className="grid gap-1">
+              <span className="font-bold leading-[1.2]">{presentation.title}</span>
               {presentation.subtitle ? (
-                <small className="grid-cell-meta">{presentation.subtitle}</small>
+                <small className="text-[0.78rem] leading-[1.25] opacity-[0.82]">
+                  {presentation.subtitle}
+                </small>
               ) : null}
             </div>
-            {hasOverride ? <small className="override-badge">Override</small> : null}
+            {hasOverride ? (
+              <small className="w-fit rounded-full bg-[rgba(20,34,33,0.08)] px-[0.45rem] py-[0.18rem] text-[0.72rem] font-bold uppercase tracking-[0.04em]">
+                Override
+              </small>
+            ) : null}
           </>
         )
 
@@ -305,7 +354,17 @@ function PeriodRow({
             <button
               key={dateKey}
               type="button"
-              className={classes}
+              className={[
+                'relative grid content-between gap-[0.65rem] rounded-[1.2rem] border-[1.5px] p-[0.85rem] cursor-pointer focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[rgba(31,111,120,0.45)] transition duration-150 ease-out hover:-translate-y-px',
+                hasOverride ? 'border-dashed' : '',
+                isSelected ? 'shadow-[0_0_0_3px_rgba(47,124,172,0.2)]' : '',
+                !isSelected && isLive
+                  ? 'shadow-[inset_0_0_0_2px_rgba(31,111,120,0.65),0_0_0_4px_rgba(31,111,120,0.08)]'
+                  : '',
+                !isSelected && !isLive && isToday
+                  ? 'shadow-[inset_0_0_0_2px_rgba(31,111,120,0.15)]'
+                  : '',
+              ].join(' ')}
               style={{
                 gridColumn: dayIndex + 2,
                 gridRow: rowIndex,
@@ -323,7 +382,17 @@ function PeriodRow({
         return (
           <div
             key={dateKey}
-            className={classes}
+            className={[
+              'relative grid content-between gap-[0.65rem] rounded-[1.2rem] border-[1.5px] p-[0.85rem]',
+              hasOverride ? 'border-dashed' : '',
+              isSelected ? 'shadow-[0_0_0_3px_rgba(47,124,172,0.2)]' : '',
+              !isSelected && isLive
+                ? 'shadow-[inset_0_0_0_2px_rgba(31,111,120,0.65),0_0_0_4px_rgba(31,111,120,0.08)]'
+                : '',
+              !isSelected && !isLive && isToday
+                ? 'shadow-[inset_0_0_0_2px_rgba(31,111,120,0.15)]'
+                : '',
+            ].join(' ')}
             style={{
               gridColumn: dayIndex + 2,
               gridRow: rowIndex,
