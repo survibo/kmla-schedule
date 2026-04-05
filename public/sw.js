@@ -1,5 +1,5 @@
-const STATIC_CACHE = 'timetable-static-v2'
-const RUNTIME_CACHE = 'timetable-runtime-v2'
+const STATIC_CACHE = 'timetable-static-__BUILD_ID__'
+const RUNTIME_CACHE = 'timetable-runtime-__BUILD_ID__'
 const APP_SHELL = [
   '/',
   '/manifest.webmanifest',

@@ -21,16 +21,6 @@ import {
   savePersistentAppState,
 } from './timetableShared.js'
 
-const DEBUG_STORAGE_ALERTS = true
-
-function debugStorageAlert(message) {
-  if (!DEBUG_STORAGE_ALERTS || typeof window === 'undefined') {
-    return
-  }
-
-  window.alert(message)
-}
-
 export function useTimetableApp() {
   const initialAppState = useMemo(() => createDefaultAppState(), [])
   const [baseTimetable, setBaseTimetable] = useState(initialAppState.baseTimetable)
@@ -55,8 +45,6 @@ export function useTimetableApp() {
     let cancelled = false
 
     async function hydratePersistentState() {
-      debugStorageAlert('hydrate start')
-
       try {
         const persistedState = await loadPersistentAppState()
 
@@ -70,9 +58,8 @@ export function useTimetableApp() {
 
         setSaveStatus('idle')
         setHasLoadedPersistentState(true)
-        debugStorageAlert('hydrate done')
-      } catch (error) {
-        debugStorageAlert(`hydrate error: ${String(error)}`)
+      } catch {
+        setSaveStatus('error')
       }
     }
 
@@ -92,7 +79,6 @@ export function useTimetableApp() {
 
     async function persistState() {
       setSaveStatus('saving')
-      debugStorageAlert('save start')
 
       try {
         const saved = await savePersistentAppState({
@@ -110,15 +96,13 @@ export function useTimetableApp() {
           void clearLegacyPersistentState()
         }
 
-        debugStorageAlert(saved ? 'save success' : 'save failed')
         setSaveStatus(saved ? 'saved' : 'error')
         setLastSavedAt(saved ? new Date() : null)
-      } catch (error) {
+      } catch {
         if (cancelled) {
           return
         }
 
-        debugStorageAlert(`save error: ${String(error)}`)
         setSaveStatus('error')
         setLastSavedAt(null)
       }
